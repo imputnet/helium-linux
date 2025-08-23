@@ -48,6 +48,8 @@ cd "${_base_dir}" && docker run --rm -i \
     -u "${_user_uidgid}" \
     -v "${_base_dir}:/repo" \
     $_gha_mount \
+    -e HOME=/home/builder \
+    -e XDG_CONFIG_HOME=/home/builder/.config \
     "${_extra_env[@]}" "${_image}" bash "${_entrypoint}" "$@"
 
 _build_end=$(date)
