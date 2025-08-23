@@ -21,7 +21,7 @@ jobs:
     uses: ./.github/workflows/build-steps.yml
     with:
       arch: ${{ matrix.arch }}
-      runs-on: ubuntu-latest
+      runs-on: ${{ github.event.inputs.runner }}
 
   release:
     name: Create release
