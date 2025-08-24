@@ -5,7 +5,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt -y update && apt -y upgrade
 
 ## Install system dependencies
-RUN apt -y install binutils desktop-file-utils dpkg file imagemagick wget xz-utils pv curl jq
+RUN apt -y install binutils desktop-file-utils dpkg file imagemagick wget xz-utils pv curl jq python3
 
 # FIXME: it would be better if we could find some way to
 # pin this to a fixed version, instead of blindly downloading
