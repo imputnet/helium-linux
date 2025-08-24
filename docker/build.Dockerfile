@@ -28,7 +28,16 @@ RUN apt-get -y install bison debhelper desktop-file-utils flex gperf gsettings-d
   uuid-dev valgrind wdiff x11-apps xcb-proto xfonts-base xvfb xz-utils yasm
 
 # install additional packages needed when cloning the chromium repo (and sudo and vim for convenience)
-RUN apt-get -y install git python3-httplib2 python3-pyparsing python3-six python3-pillow python3-requests rsync sccache sudo vim
+RUN apt-get -y install git python3-httplib2 python3-pyparsing python3-six python3-pillow python3-requests rsync sudo vim
+
+# install sccache
+ARG SCCACHE_VERSION=0.10.0
+
+RUN curl --fail -Lo /tmp/sccache.tar.gz \
+    https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/sccache-v${SCCACHE_VERSION}-$(uname -m)-unknown-linux-musl.tar.gz
+
+RUN tar --strip-components=1 -xvzf /tmp/sccache.tar.gz \
+    -C /usr/bin --wildcards '*/sccache'
 
 # create builder user
 RUN groupadd -g 1000 builder && useradd -d /home/builder -g 1000 -u 1000 -m builder
