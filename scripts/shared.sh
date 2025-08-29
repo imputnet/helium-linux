@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 
 # shared build functions used by local and CI scripts
 
@@ -30,9 +29,9 @@ setup_arch() {
 }
 
 setup_paths() {
-    _root="$(repo_root)"
-    _main_repo="${_root}/helium-chromium"
-    _build_dir="${_root}/build"
+    _root_dir="$(repo_root)"
+    _main_repo="${_root_dir}/helium-chromium"
+    _build_dir="${_root_dir}/build"
     _dl_cache="${_build_dir}/download_cache"
     _src_dir="${_build_dir}/src"
     _out_dir="${_src_dir}/out/Default"
@@ -105,7 +104,7 @@ fetch_sources() {
 apply_patches() {
     if [ ! -f "${_src_dir}/.patched.stamp" ]; then
         "${_main_repo}/utils/prune_binaries.py" "${_src_dir}" "${_main_repo}/pruning.list"
-        "${_main_repo}/utils/patches.py" apply "${_src_dir}" "${_main_repo}/patches" "${_root}/patches"
+        "${_main_repo}/utils/patches.py" apply "${_src_dir}" "${_main_repo}/patches" "${_root_dir}/patches"
         touch "${_src_dir}/.patched.stamp"
     fi
 }
@@ -125,7 +124,7 @@ helium_substitution() {
 helium_version() {
     python3 "$_main_repo/utils/helium_version.py" \
         --tree "$_main_repo" \
-        --platform-tree "$_root" \
+        --platform-tree "$_root_dir" \
         --chromium-tree "$_src_dir"
 }
 
@@ -137,7 +136,7 @@ helium_resources() {
 write_gn_args() {
     mkdir -p "${_out_dir}"
 
-    cat "${_main_repo}/flags.gn" "${_root}/flags.linux.gn" | tee "${_out_dir}/args.gn"
+    cat "${_main_repo}/flags.gn" "${_root_dir}/flags.linux.gn" | tee "${_out_dir}/args.gn"
     echo "target_cpu = \"$_build_arch\"" | tee -a "${_out_dir}/args.gn"
     echo "v8_target_cpu = \"$_build_arch\"" | tee -a "${_out_dir}/args.gn"
 
