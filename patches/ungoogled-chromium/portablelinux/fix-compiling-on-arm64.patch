@@ -14,6 +14,59 @@
  gcc_toolchain("x64") {
    cc = "gcc"
    cxx = "g++"
+--- a/tools/clang/scripts/build.py
++++ b/tools/clang/scripts/build.py
+@@ -483,6 +483,21 @@ def DownloadPinnedClang():
+                            PINNED_CLANG_VERSION)
+ 
+ 
++def GetHostSysrootPlatform():
++  assert sys.platform == 'linux', \
++    "This patch only applies to Linux, where platform.machine() is predictable"
++
++  arch = platform.machine()
++  return {
++    "aarch64": "arm64",
++    "aarch64_be": "arm64",
++    "armv7l": "arm",
++    "armv8b": "arm64",
++    "armv8l": "arm64",
++    "x86_64": "amd64",
++  }.get(arch, arch)
++
++
+ def VerifyVersionOfBuiltClangMatchesVERSION():
+   """Checks that `clang --version` outputs RELEASE_VERSION. If this
+   fails, update.RELEASE_VERSION is out-of-date and needs to be updated (possibly
+--- a/tools/rust/build_bindgen.py
++++ b/tools/rust/build_bindgen.py
+@@ -23,7 +23,7 @@ sys.path.append(
+                  'scripts'))
+ 
+ from build import (CheckoutGitRepo, DownloadAndUnpack, LLVM_BUILD_TOOLS_DIR,
+-                   DownloadDebianSysroot, RunCommand)
++                   DownloadDebianSysroot, GetHostSysrootPlatform, RunCommand)
+ from update import (RmTree)
+ 
+ # The git hash to use.
+@@ -66,7 +66,7 @@ def InstallRustBetaSysroot(rust_git_hash
+ def FetchNcurseswLibrary():
+     assert sys.platform.startswith('linux')
+     ncursesw_dir = os.path.join(LLVM_BUILD_TOOLS_DIR, 'ncursesw')
+-    ncursesw_url = (f'{CIPD_DOWNLOAD_URL}/{NCURSESW_CIPD_LINUX_AMD_PATH}'
++    ncursesw_url = (f'{CIPD_DOWNLOAD_URL}/{NCURSESW_CIPD_LINUX_AMD_PATH.replace("amd64", GetHostSysrootPlatform())}'
+                     f'/+/version:2@{NCURSESW_CIPD_LINUX_AMD_VERSION}')
+ 
+     if os.path.exists(ncursesw_dir):
+@@ -146,7 +146,7 @@ def RunCargo(cargo_args):
+ 
+     if sys.platform.startswith('linux'):
+         # We use these flags to avoid linking with the system libstdc++.
+-        sysroot = DownloadDebianSysroot('amd64')
++        sysroot = DownloadDebianSysroot(GetHostSysrootPlatform())
+         sysroot_flag = f'--sysroot={sysroot}'
+         env['CFLAGS'] += f' {sysroot_flag}'
+         env['CXXFLAGS'] += f' {sysroot_flag}'
 --- a/tools/rust/build_rust.py
 +++ b/tools/rust/build_rust.py
 @@ -55,7 +55,7 @@ sys.path.append(
@@ -91,56 +144,3 @@
 +cxx = "$LLVM_BIN/clang++"
 +linker = "$LLVM_BIN/clang"
 +
---- a/tools/rust/build_bindgen.py
-+++ b/tools/rust/build_bindgen.py
-@@ -23,7 +23,7 @@ sys.path.append(
-                  'scripts'))
- 
- from build import (CheckoutGitRepo, DownloadAndUnpack, LLVM_BUILD_TOOLS_DIR,
--                   DownloadDebianSysroot, RunCommand)
-+                   DownloadDebianSysroot, GetHostSysrootPlatform, RunCommand)
- from update import (RmTree)
- 
- # The git hash to use.
-@@ -66,7 +66,7 @@ def InstallRustBetaSysroot(rust_git_hash
- def FetchNcurseswLibrary():
-     assert sys.platform.startswith('linux')
-     ncursesw_dir = os.path.join(LLVM_BUILD_TOOLS_DIR, 'ncursesw')
--    ncursesw_url = (f'{CIPD_DOWNLOAD_URL}/{NCURSESW_CIPD_LINUX_AMD_PATH}'
-+    ncursesw_url = (f'{CIPD_DOWNLOAD_URL}/{NCURSESW_CIPD_LINUX_AMD_PATH.replace("amd64", GetHostSysrootPlatform())}'
-                     f'/+/version:2@{NCURSESW_CIPD_LINUX_AMD_VERSION}')
- 
-     if os.path.exists(ncursesw_dir):
-@@ -146,7 +146,7 @@ def RunCargo(cargo_args):
- 
-     if sys.platform.startswith('linux'):
-         # We use these flags to avoid linking with the system libstdc++.
--        sysroot = DownloadDebianSysroot('amd64')
-+        sysroot = DownloadDebianSysroot(GetHostSysrootPlatform())
-         sysroot_flag = f'--sysroot={sysroot}'
-         env['CFLAGS'] += f' {sysroot_flag}'
-         env['CXXFLAGS'] += f' {sysroot_flag}'
---- a/tools/clang/scripts/build.py
-+++ b/tools/clang/scripts/build.py
-@@ -483,6 +483,21 @@ def DownloadPinnedClang():
-                            PINNED_CLANG_VERSION)
- 
- 
-+def GetHostSysrootPlatform():
-+  assert sys.platform == 'linux', \
-+    "This patch only applies to Linux, where platform.machine() is predictable"
-+
-+  arch = platform.machine()
-+  return {
-+    "aarch64": "arm64",
-+    "aarch64_be": "arm64",
-+    "armv7l": "arm",
-+    "armv8b": "arm64",
-+    "armv8l": "arm64",
-+    "x86_64": "amd64",
-+  }.get(arch, arch)
-+
-+
- def VerifyVersionOfBuiltClangMatchesVERSION():
-   """Checks that `clang --version` outputs RELEASE_VERSION. If this
-   fails, update.RELEASE_VERSION is out-of-date and needs to be updated (possibly
