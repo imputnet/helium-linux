@@ -5,6 +5,7 @@ GenericName=Web Browser
 Comment=Access the Internet
 Exec=chromium %U
 StartupNotify=true
+StartupWMClass=helium
 Terminal=false
 Icon=helium
 Type=Application
