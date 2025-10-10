@@ -1,0 +1,36 @@
+From 00d98fb6aae90322537e768551209ee3d3b36fc7 Mon Sep 17 00:00:00 2001
+From: Helmut Januschka <helmut@januschka.com>
+Date: Mon, 06 Oct 2025 11:48:36 -0700
+Subject: [PATCH] [Wayland] Fix crash when moving windows between monitors with color management
+
+Chrome crashes when moving windows between monitors on Wayland
+compositors that support the wp_color_management_v1 protocol.
+
+Bug: 449370049
+Change-Id: I89a914e5d99c63c3d15584cb0f3ffbbf5b0f981b
+Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/7003036
+Reviewed-by: Thomas Anderson <thomasanderson@chromium.org>
+Reviewed-by: Tom Lukaszewicz <tluk@chromium.org>
+Commit-Queue: Helmut Januschka <helmut@januschka.com>
+Cr-Commit-Position: refs/heads/main@{#1525748}
+---
+
+diff --git a/ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc b/ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc
+index 9a31d99b..fa754b6 100644
+--- a/ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc
++++ b/ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc
+@@ -99,6 +99,14 @@
+   CHECK(self);
+   CHECK_EQ(feedback_surface, self->feedback_surface_.get());
+ 
++  // Reset the previous image description before creating a new one.
++  // Per the color management protocol specification:
++  // "The client should stop using and destroy the image descriptions created
++  // by earlier invocations of this request for the associated wl_surface."
++  // This prevents "invalid object" errors when the compositor or client tries
++  // to reference the old object ID after it has been destroyed.
++  self->image_description_.reset();
++
+   auto image_description_object = wl::Object<wp_image_description_v1>(
+       wp_color_management_surface_feedback_v1_get_preferred(feedback_surface));
+ 
