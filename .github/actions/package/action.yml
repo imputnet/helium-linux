@@ -16,30 +16,9 @@ runs:
       shell: bash
       run: bash ./.github/scripts/import-cache.sh
 
-    - name: Package as AppImage with Docker
+    - name: Package and sign AppImage with Docker
       shell: bash
       run: bash ./package/docker-package.sh
-
-    - name: Sign the AppImage with Docker
-      # maintainers need to set GPG_PRIVATE_KEY and GPG_PASSPHRASE as repository secrets
-      # assumes you set a passphrase for the key because that's good practice
-      if: ${{ env.GPG_PRIVATE_KEY != '' && env.GPG_PASSPHRASE != '' }}
-      shell: bash
-      env:
-        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        # this NEEDS to be the same as the image in .github/workflows/build-steps.yml
-        DOCKER_IMAGE: chromium-builder:trixie-slim
-      run: |
-        APPIMAGE_FILE=$(find build/release -name "*.AppImage" -type f)
-        if [ -z "$APPIMAGE_FILE" ]; then
-          echo "AppImage file not found!"
-          exit 1
-        fi
-
-        docker run --rm \
-          -e GPG_PRIVATE_KEY -e GPG_PASSPHRASE \
-          -v "$(pwd):/repo" "$DOCKER_IMAGE" bash -c 'echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE" && appimagetool --sign "'"$APPIMAGE_FILE"'" --updateinformation "gh-releases-zsync|imputnet|helium-linux|latest|helium-*-${{ env.ARCH }}.AppImage.zsync"'
 
     - name: List build artifacts
       shell: bash
