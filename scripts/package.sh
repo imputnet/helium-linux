@@ -97,7 +97,7 @@ _sign_flags=""
 if [[ -n "${GPG_PRIVATE_KEY:-}" && -n "${GPG_PASSPHRASE:-}" ]]; then
     echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
     # export the passphrase because passing it on the cmdline could leave it in history
-    export SIGN_PASSPHRASE="$GPG_PASSPHRASE"
+    export APPIMAGE_SIGN_PASSPHRASE="$GPG_PASSPHRASE"
     _sign_flags="--sign"
 fi
 
