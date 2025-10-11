@@ -5,7 +5,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt -y update && apt -y upgrade
 
 ## Install system dependencies
-RUN apt -y install binutils desktop-file-utils dpkg file imagemagick wget xz-utils pv curl jq python3 zsync
+RUN apt -y install binutils desktop-file-utils dpkg file imagemagick wget xz-utils pv curl jq python3 zsync gnupg
 
 RUN curl -s https://api.github.com/repos/AppImage/appimagetool/releases/tags/1.9.0 \
     | jq -r '.assets[].browser_download_url' \
