@@ -99,8 +99,6 @@ if [[ -n "${GPG_PRIVATE_KEY:-}" && -n "${GPG_PASSPHRASE:-}" ]]; then
     # export the passphrase because passing it on the cmdline could leave it in history
     export SIGN_PASSPHRASE="$GPG_PASSPHRASE"
     _sign_flags="--sign"
-else
-    true
 fi
 
 appimagetool \
