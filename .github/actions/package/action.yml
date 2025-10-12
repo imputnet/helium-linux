@@ -18,6 +18,9 @@ runs:
 
     - name: Package and sign AppImage with Docker
       shell: bash
+      env:
+        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       run: bash ./package/docker-package.sh
 
     - name: List build artifacts
