@@ -16,7 +16,7 @@
    cxx = "g++"
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
-@@ -517,6 +517,21 @@ def DownloadPinnedClang():
+@@ -518,6 +518,21 @@ def DownloadPinnedClang():
                             PINNED_CLANG_VERSION)
  
  

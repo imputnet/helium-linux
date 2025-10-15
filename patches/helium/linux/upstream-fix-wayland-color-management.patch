@@ -17,7 +17,7 @@ Cr-Commit-Position: refs/heads/main@{#1525748}
 
 --- a/ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc
 +++ b/ui/ozone/platform/wayland/host/wayland_wp_color_management_surface.cc
-@@ -98,6 +98,14 @@ void WaylandWpColorManagementSurface::On
+@@ -93,6 +93,14 @@ void WaylandWpColorManagementSurface::On
    CHECK(self);
    CHECK_EQ(feedback_surface, self->feedback_surface_.get());
  
