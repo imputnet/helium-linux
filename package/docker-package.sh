@@ -22,5 +22,7 @@ cd "${_root_dir}" && docker run --rm -i \
     -u "${_user_uidgid}" \
     ${_gpg_docker_flags} \
     -e APPIMAGE_EXTRACT_AND_RUN=1 \
+    -e HOME=/home/builder \
+    -e GNUPGHOME=/home/builder/.gnupg \
     -v "${_root_dir}:/repo" \
     "${_image}" bash "/repo/scripts/package.sh" "$@"
