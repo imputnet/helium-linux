@@ -30,7 +30,7 @@ The `scripts/docker-build.sh` script will:
 Running `scripts/build.sh` directly will not work unless you're running a Debian-based distro and have all necessary dependencies installed. This repo is designed to avoid having to configure the building environment on your Linux installation.
 
 ### Packaging
-After building, run `scripts/package.sh`. Alternatively, you can run `package/docker-package.sh` to build inside a Docker image.
+After building, run `scripts/package.sh`. Alternatively, you can run `package/docker-package.sh` to build inside a Docker image. If you would like to sign the resulting AppImage, you can pass the `--sign` argument.
 
 Either of these scripts will create `tar.xz` and `AppImage` files under `build/`.
 
