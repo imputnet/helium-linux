@@ -5,3 +5,4 @@ ungoogled-chromium/portablelinux/fix-compiling-on-arm64.patch
 helium/linux/change-chromium-branding.patch
 helium/linux/use-default-theme.patch
 helium/linux/upstream-fix-wayland-color-management.patch
+helium/linux/fix-swipe-between-pages.patch
