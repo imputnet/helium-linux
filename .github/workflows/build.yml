@@ -19,6 +19,7 @@ jobs:
       max-parallel: 2
       fail-fast: true
     uses: ./.github/workflows/build-steps.yml
+    secrets: inherit
     with:
       arch: ${{ matrix.arch }}
       runs-on: ${{ github.event.inputs.runner }}

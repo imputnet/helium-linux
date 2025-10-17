@@ -1,6 +1,14 @@
 name: Package AppImage
 description: Package Helium as AppImage and tar.xz, upload artifacts
 
+inputs:
+  private_key:
+    description: 'GPG private key'
+    required: true
+  passphrase:
+    description: 'Passphrase protecting the GPG private key'
+    required: true
+
 runs:
   using: composite
   steps:
@@ -19,8 +27,8 @@ runs:
     - name: Package and sign AppImage with Docker
       shell: bash
       env:
-        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        GPG_PRIVATE_KEY: ${{ inputs.private_key }}
+        GPG_PASSPHRASE: ${{ inputs.passphrase }}
       run: bash ./package/docker-package.sh --sign
 
     - name: List build artifacts
