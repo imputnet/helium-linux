@@ -47,6 +47,25 @@ setup_environment() {
     setup_arch
 
     _has_pgo=false
+
+    verify_submodules
+}
+
+# Verify required git submodules are present (helium-chromium)
+verify_submodules() {
+    if [ ! -d "${_main_repo}" ]; then
+        echo "error: required submodule directory not found: ${_main_repo}" >&2
+        echo "hint: run 'git submodule update --init --recursive' in the repo root" >&2
+        exit 1
+    fi
+
+    # One of these utilities must exist if the submodule is initialized
+    if [ ! -f "${_main_repo}/utils/downloads.py" ] && [ ! -f "${_main_repo}/utils/clone.py" ]; then
+        echo "error: submodule 'helium-chromium' appears uninitialized or incomplete" >&2
+        echo "missing: ${_main_repo}/utils/downloads.py (and/or clone.py)" >&2
+        echo "hint: run 'git submodule update --init --recursive' in the repo root" >&2
+        exit 1
+    fi
 }
 
 fetch_sources() {

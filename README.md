@@ -20,6 +20,9 @@ Any content imported from other projects retains its original license (for
 example, any original unmodified code imported from ungoogled-chromium remains
 licensed under their [BSD 3-Clause license](LICENSE.ungoogled_chromium)).
 
+## Getting Started
+Initialize the git submodule, using `git submodule update --init --recursive`. You can skip this if you cloned using `--recurse-submodules`.
+
 ## Building
 To build the binary, run `scripts/docker-build.sh` from the repo root.
 

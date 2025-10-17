@@ -4,6 +4,13 @@ set -euo pipefail
 _base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && cd .. && pwd)"
 _image="chromium-builder:trixie-slim"
 
+# Fail fast: required submodule must be initialized before any Docker work
+if [ ! -f "${_base_dir}/helium-chromium/utils/downloads.py" ] && [ ! -f "${_base_dir}/helium-chromium/utils/clone.py" ]; then
+    echo "error: submodule 'helium-chromium' is not initialized (missing utils/*)" >&2
+    echo "hint: run 'git submodule update --init --recursive' in the repo root" >&2
+    exit 1
+fi
+
 if [ -z "${_use_existing_image:-}" ]; then
     echo "building docker image '${_image}'"
     cd "${_base_dir}/docker" && docker buildx build --load -t "${_image}" -f ./build.Dockerfile .
