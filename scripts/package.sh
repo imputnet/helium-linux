@@ -91,21 +91,16 @@ done
 export APPIMAGETOOL_APP_NAME="Helium"
 export VERSION="$_version"
 
-_sign_flags=""
-
-# check whether GPG secrets are available
+# check whether CI GPG secrets are available
 if [[ -n "${GPG_PRIVATE_KEY:-}" && -n "${GPG_PASSPHRASE:-}" ]]; then
     echo "$GPG_PRIVATE_KEY" | gpg --batch --import --passphrase "$GPG_PASSPHRASE"
-    # export the passphrase because passing it on the cmdline could leave it in history
-    export APPIMAGE_SIGN_PASSPHRASE="$GPG_PASSPHRASE"
-    _sign_flags="--sign"
+    export APPIMAGETOOL_SIGN_PASSPHRASE="$GPG_PASSPHRASE"
 fi
 
 appimagetool \
     -u "$_update_info" \
-    $_sign_flags \
     "$_app_dir" \
-    "$_release_name.AppImage" &
+    "$_release_name.AppImage" "$@" &
 popd
 wait
 
