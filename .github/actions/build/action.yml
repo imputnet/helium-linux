@@ -29,6 +29,11 @@ runs:
       shell: bash
       run: docker load -i /tmp/chromium-builder.tar
 
+    - name: Free up runner space
+      if: runner.environment == 'github-hosted'
+      shell: bash
+      run: bash ./.github/scripts/cleanup.sh
+
     - name: Download build cache
       if: ${{ inputs.prepare-only != 'true' }}
       uses: actions/download-artifact@v4
