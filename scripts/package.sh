@@ -57,6 +57,9 @@ mkdir -p "$_tarball_dir"
 for file in $_files; do
     cp -r "$_build_dir/src/out/Default/$file" "$_tarball_dir" &
 done
+
+cp "$_root_dir/package/helium.desktop" "$_tarball_dir"
+
 wait
 
 _size="$(du -sk "$_tarball_dir" | cut -f1)"
