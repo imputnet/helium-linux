@@ -149,6 +149,8 @@ write_gn_args() {
 
     if command -v sccache >/dev/null 2>&1 && env | grep -q ^SCCACHE; then
         echo 'cc_wrapper = "sccache"' | tee -a "${_out_dir}/args.gn"
+    elif command -v ccache >/dev/null; then
+        echo 'cc_wrapper = "ccache"' | tee -a "${_out_dir}/args.gn"
     fi
 }
 
