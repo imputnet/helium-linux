@@ -77,15 +77,7 @@ cp -r "$_tarball_dir"/* "$_app_dir/opt/helium/"
 cp "$_root_dir/package/helium.desktop" "$_app_dir"
 sed -i -e 's|Exec=chromium|Exec=AppRun|g' "$_app_dir/helium.desktop"
 
-cat > "$_app_dir/AppRun" <<'EOF'
-#!/bin/sh
-THIS="$(readlink -f "${0}")"
-HERE="$(dirname "${THIS}")"
-export LD_LIBRARY_PATH="${HERE}"/usr/lib:$PATH
-export CHROME_WRAPPER="${THIS}"
-"${HERE}"/opt/helium/chrome "$@"
-EOF
-chmod a+x "$_app_dir/AppRun"
+cp "$_root_dir/package/AppRun.sh" "$_app_dir/AppRun"
 
 for out in "$_app_dir/helium.png" "${_app_dir}/usr/share/icons/hicolor/256x256/apps/helium.png"; do
     cp "${_app_dir}/opt/helium/product_logo_256.png" "$out"
