@@ -93,9 +93,6 @@ fetch_sources() {
     else
         "${_main_repo}/utils/downloads.py" retrieve -i "${_main_repo}/downloads.ini" -c "${_dl_cache}"
         "${_main_repo}/utils/downloads.py" unpack -i "${_main_repo}/downloads.ini" -c "${_dl_cache}" "${_src_dir}"
-
-        # TODO: remove this after google starts including dawn_commit_hash.h in tarballs
-        patch -p1 -d "$_src_dir" < "$_root_dir/patches/ungoogled-chromium/portablelinux/fix-tarball-dawn-commit-hash.patch"
     fi
 
     "${_main_repo}/utils/downloads.py" retrieve -i "${_main_repo}/extras.ini" -c "${_dl_cache}"
