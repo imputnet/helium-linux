@@ -6,6 +6,11 @@ on:
         required: false
         description: 'Runner image to use'
         default: 'ubuntu-latest'
+      do-release:
+        required: false
+        type: boolean
+        description: 'Create a release after build is done'
+        default: false
 
 permissions:
   contents: write
@@ -28,6 +33,7 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     needs: build
+    if: ${{ github.event.inputs.do-release }}
     steps:
       - uses: actions/checkout@v4
         with:
