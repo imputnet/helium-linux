@@ -4,12 +4,12 @@ on:
     inputs:
       runner:
         required: false
-        description: 'Runner image to use'
-        default: 'ubuntu-latest'
+        description: "Runner image to use"
+        default: "ubuntu-latest"
       do-release:
         required: false
         type: boolean
-        description: 'Create a release after build is done'
+        description: "Create a release after build is done"
         default: false
 
 permissions:
@@ -27,13 +27,13 @@ jobs:
     secrets: inherit
     with:
       arch: ${{ matrix.arch }}
-      runs-on: ${{ github.event.inputs.runner }}
+      runs-on: ${{ inputs.runner }}
 
   release:
     name: Create release
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event.inputs.do-release }}
+    if: ${{ inputs.do-release }}
     steps:
       - uses: actions/checkout@v4
         with:
