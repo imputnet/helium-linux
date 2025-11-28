@@ -1,0 +1,628 @@
+This is a backport of the following patches:
+
+6617ece96e336 [blink] Use "Middle Click Paste" setting
+362c5e879c30c [Linux UI] Respect middle click paste preference
+7357da8727ca7 [Linux UI] Add Clipboard function for middle click paste pref
+963ad4cceeb82 [Linux UI] Observe middle click paste pref and update renderer
+e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
+18efd4b7a9aa7 [blink] Add "middle click paste" renderer pref & setting
+6fa784e544b48 [Linux UI] Read "Primary Paste" GTK setting
+
+--- a/chrome/browser/BUILD.gn
++++ b/chrome/browser/BUILD.gn
+@@ -7251,13 +7251,14 @@ static_library("browser") {
+       "//ui/wm",
+     ]
+     if (is_linux) {
+-      deps += [
+-        "//ui/linux:linux_ui",
+-        "//ui/linux:linux_ui_factory",
+-      ]
++      deps += [ "//ui/linux:linux_ui_factory" ]
+     }
+   }
+ 
++  if (is_linux) {
++    deps += [ "//ui/linux:linux_ui" ]
++  }
++
+   if (use_ozone) {
+     sources += [
+       "chrome_browser_main_extra_parts_ozone.cc",
+--- a/chrome/browser/renderer_preferences_util.cc
++++ b/chrome/browser/renderer_preferences_util.cc
+@@ -41,6 +41,9 @@
+ #if defined(USE_AURA) && BUILDFLAG(IS_LINUX)
+ #include "chrome/browser/themes/theme_service.h"
+ #include "chrome/browser/themes/theme_service_factory.h"
++#endif
++
++#if BUILDFLAG(IS_LINUX)
+ #include "ui/linux/linux_ui.h"
+ #endif
+ 
+@@ -137,7 +140,13 @@ void UpdateFromSystemSettings(blink::Ren
+           &prefs->inactive_selection_fg_color);
+     }
+   }
+-#endif
++#endif  // BUILDFLAG(IS_LINUX)
++#endif  // BUILDFLAG(USE_AURA)
++
++#if BUILDFLAG(IS_LINUX)
++  if (auto* linux_ui = ui::LinuxUi::instance()) {
++    prefs->middle_click_paste_allowed = linux_ui->PrimaryPasteEnabled();
++  }
+ #endif
+   prefs->caret_blink_interval =
+       ui::NativeTheme::GetInstanceForNativeUi()->caret_blink_interval();
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+@@ -1665,6 +1665,7 @@ bool LocationBarView::IsEditingOrEmpty()
+ 
+ void LocationBarView::OnLocationIconPressed(const ui::MouseEvent& event) {
+   if (event.IsOnlyMiddleMouseButton() &&
++      ui::Clipboard::IsMiddleClickPasteEnabled() &&
+       ui::Clipboard::IsSupportedClipboardBuffer(
+           ui::ClipboardBuffer::kSelection)) {
+     std::u16string text;
+--- a/ui/views/selection_controller.cc
++++ b/ui/views/selection_controller.cc
+@@ -91,7 +91,9 @@ bool SelectionController::OnMousePressed
+     delegate_->OnBeforePointerAction();
+     const bool selection_changed =
+         render_text->MoveCursorToPoint(event.location(), false);
+-    const bool text_changed = delegate_->PasteSelectionClipboard();
++    const bool text_changed = ui::Clipboard::IsMiddleClickPasteEnabled()
++                                  ? delegate_->PasteSelectionClipboard()
++                                  : false;
+     delegate_->OnAfterPointerAction(text_changed,
+                                     selection_changed | text_changed);
+   }
+--- a/ui/gtk/gtk_ui.cc
++++ b/ui/gtk/gtk_ui.cc
+@@ -82,6 +82,7 @@
+ #include "ui/linux/linux_ui.h"
+ #include "ui/linux/linux_ui_delegate.h"
+ #include "ui/linux/nav_button_provider.h"
++#include "ui/linux/primary_paste_pref_observer.h"
+ #include "ui/linux/window_button_order_observer.h"
+ #include "ui/native_theme/native_theme.h"
+ #include "ui/native_theme/os_settings_provider.h"
+@@ -373,6 +374,8 @@ bool GtkUi::Initialize() {
+           &GtkUi::OnCursorThemeSizeChanged);
+   connect(settings, "notify::gtk-enable-animations",
+           &GtkUi::OnEnableAnimationsChanged);
++  connect(settings, "notify::gtk-enable-primary-paste",
++          &GtkUi::OnPrimaryPasteChanged);
+ 
+   // Listen for DPI changes, if supported.
+   if (GetXftDpi() > 0) {
+@@ -636,6 +639,13 @@ ui::LinuxUi::WindowFrameAction GtkUi::Ge
+   return window_frame_actions_[source];
+ }
+ 
++bool GtkUi::PrimaryPasteEnabled() const {
++  gboolean paste_enabled = false;
++  g_object_get(gtk_settings_get_default(), "gtk-enable-primary-paste",
++               &paste_enabled, nullptr);
++  return paste_enabled;
++}
++
+ bool GtkUi::PreferDarkTheme() const {
+   gboolean dark = false;
+   g_object_get(gtk_settings_get_default(), "gtk-application-prefer-dark-theme",
+@@ -855,6 +865,11 @@ void GtkUi::OnEnableAnimationsChanged(Gt
+   gfx::Animation::UpdatePrefersReducedMotion();
+ }
+ 
++void GtkUi::OnPrimaryPasteChanged(GtkSettings* settings, GtkParamSpec* param) {
++  primary_paste_observers().Notify(
++      &ui::PrimaryPastePrefObserver::OnPrimaryPastePrefChanged);
++}
++
+ void GtkUi::OnGtkXftDpiChanged(GtkSettings* settings, GParamSpec* param) {
+   UpdateDeviceScaleFactor();
+ }
+--- a/ui/gtk/gtk_ui.h
++++ b/ui/gtk/gtk_ui.h
+@@ -94,6 +94,7 @@ class GtkUi : public ui::LinuxUiAndTheme
+       ui::WindowButtonOrderObserver* observer) override;
+   WindowFrameAction GetWindowFrameAction(
+       WindowFrameActionSource source) override;
++  bool PrimaryPasteEnabled() const override;
+   std::vector<std::string> GetCmdLineFlagsForCopy() const override;
+ 
+   // ui::LinuxUiTheme:
+@@ -124,6 +125,8 @@ class GtkUi : public ui::LinuxUiAndTheme
+ 
+   void OnEnableAnimationsChanged(GtkSettings* settings, GtkParamSpec* param);
+ 
++  void OnPrimaryPasteChanged(GtkSettings* settings, GtkParamSpec* param);
++
+   void OnGtkXftDpiChanged(GtkSettings* settings, GParamSpec* param);
+ 
+   void OnScreenResolutionChanged(GdkScreen* screen, GParamSpec* param);
+--- a/ui/linux/BUILD.gn
++++ b/ui/linux/BUILD.gn
+@@ -17,6 +17,7 @@ component("linux_ui") {
+     "linux_ui_delegate_stub.h",
+     "linux_ui_getter.h",
+     "nav_button_provider.h",
++    "primary_paste_pref_observer.h",
+     "status_icon_linux.h",
+     "window_button_order_observer.h",
+     "window_frame_provider.h",
+--- a/ui/linux/fake_linux_ui.cc
++++ b/ui/linux/fake_linux_ui.cc
+@@ -84,6 +84,10 @@ LinuxUi::WindowFrameAction FakeLinuxUi::
+   return WindowFrameAction::kNone;
+ }
+ 
++bool FakeLinuxUi::PrimaryPasteEnabled() const {
++  return true;
++}
++
+ std::vector<std::string> FakeLinuxUi::GetCmdLineFlagsForCopy() const {
+   return {};
+ }
+--- a/ui/linux/fake_linux_ui.h
++++ b/ui/linux/fake_linux_ui.h
+@@ -44,6 +44,7 @@ class FakeLinuxUi : public LinuxUiAndThe
+       ui::WindowButtonOrderObserver* observer) override;
+   void RemoveWindowButtonOrderObserver(
+       ui::WindowButtonOrderObserver* observer) override;
++  bool PrimaryPasteEnabled() const override;
+   WindowFrameAction GetWindowFrameAction(
+       WindowFrameActionSource source) override;
+   std::vector<std::string> GetCmdLineFlagsForCopy() const override;
+--- a/ui/linux/fallback_linux_ui.cc
++++ b/ui/linux/fallback_linux_ui.cc
+@@ -149,6 +149,10 @@ ui::WindowFrameProvider* FallbackLinuxUi
+   return nullptr;
+ }
+ 
++bool FallbackLinuxUi::PrimaryPasteEnabled() const {
++  return true;
++}
++
+ base::flat_map<std::string, std::string>
+ FallbackLinuxUi::GetKeyboardLayoutMap() {
+   return ui::GenerateDomKeyboardLayoutMap();
+--- a/ui/linux/fallback_linux_ui.h
++++ b/ui/linux/fallback_linux_ui.h
+@@ -49,6 +49,7 @@ class FallbackLinuxUi : public LinuxUiAn
+       ui::WindowButtonOrderObserver* observer) override;
+   WindowFrameAction GetWindowFrameAction(
+       WindowFrameActionSource source) override;
++  bool PrimaryPasteEnabled() const override;
+   std::vector<std::string> GetCmdLineFlagsForCopy() const override;
+ 
+   // ui::LinuxUiTheme:
+--- a/ui/linux/linux_ui.cc
++++ b/ui/linux/linux_ui.cc
+@@ -13,6 +13,7 @@
+ #include "build/build_config.h"
+ #include "ui/linux/cursor_theme_manager_observer.h"
+ #include "ui/linux/linux_ui_getter.h"
++#include "ui/linux/primary_paste_pref_observer.h"
+ 
+ namespace ui {
+ 
+@@ -70,6 +71,15 @@ void LinuxUi::RemoveCursorThemeObserver(
+   cursor_theme_observer_list_.RemoveObserver(observer);
+ }
+ 
++void LinuxUi::AddPrimaryPastePrefObserver(PrimaryPastePrefObserver* observer) {
++  primary_paste_observer_list_.AddObserver(observer);
++}
++
++void LinuxUi::RemovePrimaryPastePrefObserver(
++    PrimaryPastePrefObserver* observer) {
++  primary_paste_observer_list_.RemoveObserver(observer);
++}
++
+ LinuxUi::FontSettings LinuxUi::GetDefaultFontDescription() {
+   if (!default_font_settings_.has_value()) {
+     InitializeFontSettings();
+--- a/ui/linux/linux_ui.h
++++ b/ui/linux/linux_ui.h
+@@ -52,6 +52,7 @@ class LinuxInputMethodContextDelegate;
+ class LinuxUiTheme;
+ class NativeTheme;
+ class NavButtonProvider;
++class PrimaryPastePrefObserver;
+ class SelectFileDialog;
+ class SelectFilePolicy;
+ class WindowButtonOrderObserver;
+@@ -117,6 +118,11 @@ class COMPONENT_EXPORT(LINUX_UI) LinuxUi
+ 
+   void RemoveCursorThemeObserver(CursorThemeManagerObserver* observer);
+ 
++  // Adds `observer` and calls if the middle click paste preference changes.
++  void AddPrimaryPastePrefObserver(PrimaryPastePrefObserver* observer);
++
++  void RemovePrimaryPastePrefObserver(PrimaryPastePrefObserver* observer);
++
+   // Returns details about the default UI font.
+   FontSettings GetDefaultFontDescription();
+ 
+@@ -199,6 +205,9 @@ class COMPONENT_EXPORT(LINUX_UI) LinuxUi
+   virtual WindowFrameAction GetWindowFrameAction(
+       WindowFrameActionSource source) = 0;
+ 
++  // Whether a middle mouse click should paste the primary clipboard contents.
++  virtual bool PrimaryPasteEnabled() const = 0;
++
+   // Returns the command line flags that should be copied to subprocesses
+   // to have the same toolkit and version as this process.
+   virtual std::vector<std::string> GetCmdLineFlagsForCopy() const = 0;
+@@ -233,6 +242,10 @@ class COMPONENT_EXPORT(LINUX_UI) LinuxUi
+     return cursor_theme_observer_list_;
+   }
+ 
++  base::ObserverList<PrimaryPastePrefObserver>& primary_paste_observers() {
++    return primary_paste_observer_list_;
++  }
++
+   display::DisplayConfig& display_config() { return display_config_; }
+ 
+   void set_default_font_settings(
+@@ -248,6 +261,9 @@ class COMPONENT_EXPORT(LINUX_UI) LinuxUi
+   // Objects to notify when the cursor theme or size changes.
+   base::ObserverList<CursorThemeManagerObserver> cursor_theme_observer_list_;
+ 
++  // Objects to notify when the middle click paste preference changes.
++  base::ObserverList<PrimaryPastePrefObserver> primary_paste_observer_list_;
++
+   display::DisplayConfig display_config_;
+ 
+   std::optional<FontSettings> default_font_settings_;
+@@ -358,6 +374,18 @@ struct ScopedObservationTraits<ui::Linux
+   }
+ };
+ 
++template <>
++struct ScopedObservationTraits<ui::LinuxUi, ui::PrimaryPastePrefObserver> {
++  static void AddObserver(ui::LinuxUi* source,
++                          ui::PrimaryPastePrefObserver* observer) {
++    source->AddPrimaryPastePrefObserver(observer);
++  }
++  static void RemoveObserver(ui::LinuxUi* source,
++                             ui::PrimaryPastePrefObserver* observer) {
++    source->RemovePrimaryPastePrefObserver(observer);
++  }
++};
++
+ }  // namespace base
+ 
+ #endif  // UI_LINUX_LINUX_UI_H_
+--- /dev/null
++++ b/ui/linux/primary_paste_pref_observer.h
+@@ -0,0 +1,22 @@
++// Copyright 2025 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef UI_LINUX_PRIMARY_PASTE_PREF_OBSERVER_H_
++#define UI_LINUX_PRIMARY_PASTE_PREF_OBSERVER_H_
++
++#include "base/observer_list_types.h"
++
++namespace ui {
++
++class PrimaryPastePrefObserver : public base::CheckedObserver {
++ public:
++  virtual void OnPrimaryPastePrefChanged() = 0;
++
++ protected:
++  ~PrimaryPastePrefObserver() override = default;
++};
++
++}  // namespace ui
++
++#endif  // UI_LINUX_PRIMARY_PASTE_PREF_OBSERVER_H_
+--- a/ui/qt/qt_ui.cc
++++ b/ui/qt/qt_ui.cc
+@@ -350,6 +350,11 @@ QtUi::WindowFrameAction QtUi::GetWindowF
+   }
+ }
+ 
++bool QtUi::PrimaryPasteEnabled() const {
++  // Qt 6 does not have any setting that controls middle click behavior.
++  return true;
++}
++
+ std::vector<std::string> QtUi::GetCmdLineFlagsForCopy() const {
+   return {std::string(switches::kUiToolkitFlag) + "=qt",
+           base::StrCat({switches::kQtVersionFlag, "=",
+--- a/ui/qt/qt_ui.h
++++ b/ui/qt/qt_ui.h
+@@ -65,6 +65,7 @@ class QtUi : public ui::LinuxUiAndTheme,
+       ui::WindowButtonOrderObserver* observer) override;
+   WindowFrameAction GetWindowFrameAction(
+       WindowFrameActionSource source) override;
++  bool PrimaryPasteEnabled() const override;
+   std::vector<std::string> GetCmdLineFlagsForCopy() const override;
+ 
+   // ui::LinuxUiTheme:
+--- a/ui/base/clipboard/BUILD.gn
++++ b/ui/base/clipboard/BUILD.gn
+@@ -189,6 +189,10 @@ component("clipboard") {
+     deps += [ "//ui/base:clipboard_jni_headers" ]
+   }
+ 
++  if (is_linux) {
++    deps += [ "//ui/linux:linux_ui" ]
++  }
++
+   if (is_mac) {
+     deps += [ ":url_file_parser" ]
+     frameworks = [
+--- a/ui/base/clipboard/clipboard.cc
++++ b/ui/base/clipboard/clipboard.cc
+@@ -29,6 +29,10 @@
+ #include "ui/gfx/geometry/size.h"
+ #include "url/gurl.h"
+ 
++#if BUILDFLAG(IS_LINUX)
++#include "ui/linux/linux_ui.h"
++#endif
++
+ namespace ui {
+ 
+ Clipboard::HtmlData::HtmlData() noexcept = default;
+@@ -74,6 +78,20 @@ bool Clipboard::IsSupportedClipboardBuff
+ }
+ 
+ // static
++bool Clipboard::IsMiddleClickPasteEnabled() {
++#if BUILDFLAG(IS_LINUX)
++  if (auto* linux_ui = ui::LinuxUi::instance()) {
++    return linux_ui->PrimaryPasteEnabled();
++  }
++#endif
++
++  // This code is most likely never hit on other platforms, but
++  // if it happens to be, let's return `true` to preserve
++  // middle click paste behavior without a preference.
++  return true;
++}
++
++// static
+ void Clipboard::SetAllowedThreads(
+     const std::vector<base::PlatformThreadId>& allowed_threads) {
+   base::AutoLock lock(ClipboardMapLock());
+--- a/ui/base/clipboard/clipboard.h
++++ b/ui/base/clipboard/clipboard.h
+@@ -102,6 +102,9 @@ class COMPONENT_EXPORT(UI_BASE_CLIPBOARD
+ 
+   static bool IsSupportedClipboardBuffer(ClipboardBuffer buffer);
+ 
++  // Whether to allow pasting on middle click mouse events.
++  static bool IsMiddleClickPasteEnabled();
++
+   // Sets the list of threads that are allowed to access the clipboard.
+   static void SetAllowedThreads(
+       const std::vector<base::PlatformThreadId>& allowed_threads);
+--- a/chrome/browser/ui/prefs/BUILD.gn
++++ b/chrome/browser/ui/prefs/BUILD.gn
+@@ -61,6 +61,10 @@ source_set("impl") {
+   } else {
+     deps += [ "//chrome/browser/themes" ]
+   }
++
++  if (is_linux) {
++    deps += [ "//ui/linux:linux_ui" ]
++  }
+ }
+ 
+ if (!is_android || enable_desktop_android_extensions) {
+--- a/chrome/browser/ui/prefs/pref_watcher.cc
++++ b/chrome/browser/ui/prefs/pref_watcher.cc
+@@ -39,6 +39,11 @@
+ #include "components/browser_ui/accessibility/android/font_size_prefs_android.h"
+ #endif
+ 
++#if BUILDFLAG(IS_LINUX)
++#include "ui/linux/linux_ui.h"
++#include "ui/linux/primary_paste_pref_observer.h"
++#endif
++
+ namespace {
+ 
+ // The list of prefs we want to observe.
+@@ -86,6 +91,31 @@ const char* const kWebPrefsToObserve[] =
+ 
+ }  // namespace
+ 
++#if BUILDFLAG(IS_LINUX)
++// A helper class to handle notifying about changes in the
++// Primary Paste/Middle Click Paste preference on Linux.
++class PrimaryPastePrefHelper : public ui::PrimaryPastePrefObserver {
++ public:
++  explicit PrimaryPastePrefHelper(PrefWatcher* watcher) : watcher_(watcher) {
++    DCHECK(watcher);
++
++    if (auto* linux_ui = ui::LinuxUi::instance()) {
++      primary_paste_pref_observation_.Observe(linux_ui);
++    }
++  }
++
++  // ui::PrimaryPastePrefObserver:
++  void OnPrimaryPastePrefChanged() override {
++    watcher_->UpdateRendererPreferences();
++  }
++
++ private:
++  raw_ptr<PrefWatcher> watcher_;
++  base::ScopedObservation<ui::LinuxUi, ui::PrimaryPastePrefObserver>
++      primary_paste_pref_observation_{this};
++};
++#endif
++
+ // Watching all these settings per tab is slow when a user has a lot of tabs and
+ // and they use session restore. So watch them once per profile.
+ // http://crbug.com/452693
+@@ -98,6 +128,10 @@ PrefWatcher::PrefWatcher(Profile* profil
+       tracking_protection_settings_);
+   native_theme_observation_.Observe(ui::NativeTheme::GetInstanceForWeb());
+ 
++#if BUILDFLAG(IS_LINUX)
++  primary_paste_pref_helper_ = std::make_unique<PrimaryPastePrefHelper>(this);
++#endif
++
+   profile_pref_change_registrar_.Init(profile_->GetPrefs());
+ 
+   base::RepeatingClosure renderer_callback = base::BindRepeating(
+--- a/chrome/browser/ui/prefs/pref_watcher.h
++++ b/chrome/browser/ui/prefs/pref_watcher.h
+@@ -19,6 +19,7 @@
+ 
+ class Profile;
+ class PrefsTabHelper;
++class PrimaryPastePrefHelper;
+ 
+ // Watches updates in WebKitPreferences and blink::RendererPreferences, and
+ // notifies tab helpers and registered watchers of those updates.
+@@ -63,6 +64,11 @@ class PrefWatcher : public KeyedService,
+   // blink::RendererPreferences.
+   std::set<raw_ptr<PrefsTabHelper, SetExperimental>> tab_helpers_;
+ 
++#if BUILDFLAG(IS_LINUX)
++  friend class PrimaryPastePrefHelper;
++  std::unique_ptr<PrimaryPastePrefHelper> primary_paste_pref_helper_;
++#endif
++
+   // |renderer_preference_watchers_| observe changes in
+   // blink::RendererPreferences. If the consumer also wants to WebKit
+   // preference changes, use |tab_helpers_|.
+--- a/third_party/blink/common/renderer_preferences/renderer_preferences_mojom_traits.cc
++++ b/third_party/blink/common/renderer_preferences/renderer_preferences_mojom_traits.cc
+@@ -117,6 +117,9 @@ bool StructTraits<blink::mojom::Renderer
+   out->selection_clipboard_buffer_available =
+       data.selection_clipboard_buffer_available();
+ #endif
++#if BUILDFLAG(IS_LINUX)
++  out->middle_click_paste_allowed = data.middle_click_paste_allowed();
++#endif
+   out->plugin_fullscreen_allowed = data.plugin_fullscreen_allowed();
+   out->caret_browsing_enabled = data.caret_browsing_enabled();
+ 
+--- a/third_party/blink/public/common/renderer_preferences/renderer_preferences.h
++++ b/third_party/blink/public/common/renderer_preferences/renderer_preferences.h
+@@ -88,6 +88,9 @@ struct BLINK_COMMON_EXPORT RendererPrefe
+ #if BUILDFLAG(IS_OZONE)
+   bool selection_clipboard_buffer_available{false};
+ #endif
++#if BUILDFLAG(IS_LINUX)
++  bool middle_click_paste_allowed{true};
++#endif
+   bool plugin_fullscreen_allowed{true};
+   bool caret_browsing_enabled{false};
+   bool uses_platform_autofill{false};
+--- a/third_party/blink/public/common/renderer_preferences/renderer_preferences_mojom_traits.h
++++ b/third_party/blink/public/common/renderer_preferences/renderer_preferences_mojom_traits.h
+@@ -199,6 +199,13 @@ struct BLINK_COMMON_EXPORT
+   }
+ #endif
+ 
++#if BUILDFLAG(IS_LINUX)
++  static const bool& middle_click_paste_allowed(
++      const ::blink::RendererPreferences& data) {
++    return data.middle_click_paste_allowed;
++  }
++#endif
++
+ #if BUILDFLAG(IS_WIN)
+   static const std::u16string& caption_font_family_name(
+       const ::blink::RendererPreferences& data) {
+--- a/third_party/blink/public/mojom/renderer_preferences.mojom
++++ b/third_party/blink/public/mojom/renderer_preferences.mojom
+@@ -197,6 +197,10 @@ struct RendererPreferences {
+   [EnableIf=is_selection_clipboard_buffer_possible]
+   bool selection_clipboard_buffer_available = false;
+ 
++  // Whether to allow pasting text on middle click mouse events.
++  [EnableIf=is_linux]
++  bool middle_click_paste_allowed = true;
++
+   // Set to true if the renderer should assume that the embedder delegates all
+   // Autofill activity and requests to the platform instead of providing its
+   // own implementation.
+--- a/third_party/blink/public/web/web_settings.h
++++ b/third_party/blink/public/web/web_settings.h
+@@ -279,6 +279,7 @@ class WebSettings {
+   virtual void SetNavigationControls(NavigationControls) = 0;
+   virtual void SetAriaModalPrunesAXTree(bool) = 0;
+   virtual void SetSelectionClipboardBufferAvailable(bool) = 0;
++  virtual void SetMiddleClickPasteAllowed(bool) = 0;
+   virtual void SetAccessibilityIncludeSvgGElement(bool) = 0;
+   virtual void SetWebXRImmersiveArAllowed(bool) = 0;
+   virtual void SetModalContextMenu(bool) = 0;
+--- a/third_party/blink/renderer/core/exported/web_settings_impl.cc
++++ b/third_party/blink/renderer/core/exported/web_settings_impl.cc
+@@ -792,6 +792,10 @@ void WebSettingsImpl::SetSelectionClipbo
+   settings_->SetSelectionClipboardBufferAvailable(available);
+ }
+ 
++void WebSettingsImpl::SetMiddleClickPasteAllowed(bool allowed) {
++  settings_->SetMiddleClickPasteAllowed(allowed);
++}
++
+ void WebSettingsImpl::SetAccessibilityIncludeSvgGElement(bool include) {
+   settings_->SetAccessibilityIncludeSvgGElement(include);
+ }
+--- a/third_party/blink/renderer/core/exported/web_settings_impl.h
++++ b/third_party/blink/renderer/core/exported/web_settings_impl.h
+@@ -231,6 +231,7 @@ class CORE_EXPORT WebSettingsImpl final
+ 
+   void SetAriaModalPrunesAXTree(bool) override;
+   void SetSelectionClipboardBufferAvailable(bool) override;
++  void SetMiddleClickPasteAllowed(bool) override;
+   void SetAccessibilityIncludeSvgGElement(bool) override;
+   void SetWebXRImmersiveArAllowed(bool webxr_immersive_ar_allowed) override;
+   void SetModalContextMenu(bool) override;
+--- a/third_party/blink/renderer/core/exported/web_view_impl.cc
++++ b/third_party/blink/renderer/core/exported/web_view_impl.cc
+@@ -3614,6 +3614,11 @@ void WebViewImpl::UpdateRendererPreferen
+       renderer_preferences_.selection_clipboard_buffer_available);
+ #endif  // BUILDFLAG(IS_OZONE)
+ 
++#if BUILDFLAG(IS_LINUX)
++  GetSettings()->SetMiddleClickPasteAllowed(
++      renderer_preferences_.middle_click_paste_allowed);
++#endif  // BUILDFLAG(IS_LINUX)
++
+   SetExplicitlyAllowedPorts(
+       renderer_preferences_.explicitly_allowed_network_ports);
+ 
+--- a/third_party/blink/renderer/core/frame/settings.json5
++++ b/third_party/blink/renderer/core/frame/settings.json5
+@@ -1202,6 +1202,10 @@
+       initial: false,
+     },
+     {
++      name: "middleClickPasteAllowed",
++      initial: true
++    },
++    {
+       name: "accessibilityIncludeSvgGElement",
+       initial: false,
+     },
+--- a/third_party/blink/renderer/core/editing/selection_controller.cc
++++ b/third_party/blink/renderer/core/editing/selection_controller.cc
+@@ -1264,6 +1264,13 @@ bool SelectionController::HandlePasteGlo
+ 
+   if (!frame_->GetPage())
+     return false;
++
++  // Do not paste if the user has opted out of middle-click pasting.
++  if (auto* settings = frame_->GetSettings();
++      settings && !settings->GetMiddleClickPasteAllowed()) {
++    return false;
++  }
++
+   Frame* focus_frame =
+       frame_->GetPage()->GetFocusController().FocusedOrMainFrame();
+   // Do not paste here if the focus was moved somewhere else.

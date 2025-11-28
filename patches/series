@@ -6,3 +6,5 @@ helium/linux/change-chromium-branding.patch
 helium/linux/use-default-theme.patch
 helium/linux/upstream-fix-wayland-color-management.patch
 helium/linux/fix-swipe-between-pages.patch
+helium/linux/respect-middle-click-paste.patch
+helium/linux/middle-click-paste-flag.patch
