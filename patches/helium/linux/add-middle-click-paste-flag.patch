@@ -20,27 +20,6 @@
 +     "Controls middle click paste functionality. Helium flag.",
 +     kOsLinux, FEATURE_VALUE_TYPE(features::kMiddleClickPasteEnabled)},
  #endif  /* CHROME_BROWSER_HELIUM_FLAG_ENTRIES_H_ */
- --- a/ui/base/ui_base_features.cc
- +++ b/ui/base/ui_base_features.cc
- @@ -434,4 +434,6 @@ BASE_FEATURE(kUseSystemDefaultAccentColo
-  
-  BASE_FEATURE(kStringWidthCache, base::FEATURE_DISABLED_BY_DEFAULT);
-  
- +BASE_FEATURE(kMiddleClickPasteEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
- +
-  }  // namespace features
- --- a/ui/base/ui_base_features.h
- +++ b/ui/base/ui_base_features.h
- @@ -267,6 +267,9 @@ BASE_DECLARE_FEATURE(kUseSystemDefaultAc
-  COMPONENT_EXPORT(UI_BASE_FEATURES)
-  BASE_DECLARE_FEATURE(kStringWidthCache);
-  
- +COMPONENT_EXPORT(UI_BASE_FEATURES)
- +BASE_DECLARE_FEATURE(kMiddleClickPasteEnabled);
- +
-  }  // namespace features
-  
-  #endif  // UI_BASE_UI_BASE_FEATURES_H_
 --- a/chrome/browser/renderer_preferences_util.cc
 +++ b/chrome/browser/renderer_preferences_util.cc
 @@ -9,6 +9,7 @@
@@ -89,3 +68,24 @@
    if (auto* linux_ui = ui::LinuxUi::instance()) {
      return linux_ui->PrimaryPasteEnabled();
    }
+--- a/ui/base/ui_base_features.cc
++++ b/ui/base/ui_base_features.cc
+@@ -434,4 +434,6 @@ BASE_FEATURE(kUseSystemDefaultAccentColo
+ 
+ BASE_FEATURE(kStringWidthCache, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
++BASE_FEATURE(kMiddleClickPasteEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
++
+ }  // namespace features
+--- a/ui/base/ui_base_features.h
++++ b/ui/base/ui_base_features.h
+@@ -267,6 +267,9 @@ BASE_DECLARE_FEATURE(kUseSystemDefaultAc
+ COMPONENT_EXPORT(UI_BASE_FEATURES)
+ BASE_DECLARE_FEATURE(kStringWidthCache);
+ 
++COMPONENT_EXPORT(UI_BASE_FEATURES)
++BASE_DECLARE_FEATURE(kMiddleClickPasteEnabled);
++
+ }  // namespace features
+ 
+ #endif  // UI_BASE_UI_BASE_FEATURES_H_
