@@ -1,6 +1,6 @@
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -1814,7 +1814,7 @@ if (is_linux || is_chromeos) {
+@@ -1809,7 +1809,7 @@ if (is_linux || is_chromeos) {
      ]
      if (is_linux) {
        sources += [

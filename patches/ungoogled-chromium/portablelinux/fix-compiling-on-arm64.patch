@@ -78,7 +78,7 @@
                     GitRevert, LLVM_DIR, IsGitAncestorToHead,
                     LLVM_BUILD_TOOLS_DIR, RunCommand)
  from update import (CHROMIUM_DIR, DownloadAndUnpack, EnsureDirExists,
-@@ -195,8 +195,8 @@ def AddOpenSSLToEnv():
+@@ -200,8 +200,8 @@ def AddOpenSSLToEnv():
          ssl_url = (f'{CIPD_DOWNLOAD_URL}/{OPENSSL_CIPD_WIN_AMD_PATH}'
                     f'/+/version:2@{OPENSSL_CIPD_WIN_AMD_VERSION}')
      else:
@@ -89,7 +89,7 @@
  
      if os.path.exists(ssl_dir):
          RmTree(ssl_dir)
-@@ -572,7 +572,7 @@ def RustTargetTriple():
+@@ -577,7 +577,7 @@ def RustTargetTriple():
      elif sys.platform == 'win32':
          return 'x86_64-pc-windows-msvc'
      else:
@@ -98,7 +98,7 @@
  
  
  # Build the LLVM libraries and install them .
-@@ -583,6 +583,9 @@ def BuildLLVMLibraries(skip_build, llvm_
+@@ -588,6 +588,9 @@ def BuildLLVMLibraries(skip_build, llvm_
              sys.executable,
              os.path.join(CLANG_SCRIPTS_DIR, 'build.py'),
              '--disable-asserts',
@@ -108,7 +108,7 @@
              '--no-tools',
              '--no-runtimes',
              # PIC needed for Rust build (links LLVM into shared object)
-@@ -784,7 +787,8 @@ def main():
+@@ -783,7 +786,8 @@ def main():
          # Fetch sysroot we build rustc against. This ensures a minimum supported
          # host (not Chromium target). Since the rustc linux package is for
          # x86_64 only, that is the sole needed sysroot.

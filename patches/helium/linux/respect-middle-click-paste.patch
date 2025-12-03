@@ -10,7 +10,7 @@ e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
 
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -7251,13 +7251,14 @@ static_library("browser") {
+@@ -7252,13 +7252,14 @@ static_library("browser") {
        "//ui/wm",
      ]
      if (is_linux) {
@@ -58,9 +58,9 @@ e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
        ui::NativeTheme::GetInstanceForNativeUi()->caret_blink_interval();
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -1665,6 +1665,7 @@ bool LocationBarView::IsEditingOrEmpty()
+@@ -1925,6 +1925,7 @@ void LocationBarView::OnLocationIconPres
+   }
  
- void LocationBarView::OnLocationIconPressed(const ui::MouseEvent& event) {
    if (event.IsOnlyMiddleMouseButton() &&
 +      ui::Clipboard::IsMiddleClickPasteEnabled() &&
        ui::Clipboard::IsSupportedClipboardBuffer(
@@ -126,7 +126,7 @@ e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
  }
 --- a/ui/gtk/gtk_ui.h
 +++ b/ui/gtk/gtk_ui.h
-@@ -94,6 +94,7 @@ class GtkUi : public ui::LinuxUiAndTheme
+@@ -93,6 +93,7 @@ class GtkUi : public ui::LinuxUiAndTheme
        ui::WindowButtonOrderObserver* observer) override;
    WindowFrameAction GetWindowFrameAction(
        WindowFrameActionSource source) override;
@@ -134,7 +134,7 @@ e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
    std::vector<std::string> GetCmdLineFlagsForCopy() const override;
  
    // ui::LinuxUiTheme:
-@@ -124,6 +125,8 @@ class GtkUi : public ui::LinuxUiAndTheme
+@@ -123,6 +124,8 @@ class GtkUi : public ui::LinuxUiAndTheme
  
    void OnEnableAnimationsChanged(GtkSettings* settings, GtkParamSpec* param);
  
@@ -348,7 +348,7 @@ e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
    // ui::LinuxUiTheme:
 --- a/ui/base/clipboard/BUILD.gn
 +++ b/ui/base/clipboard/BUILD.gn
-@@ -189,6 +189,10 @@ component("clipboard") {
+@@ -192,6 +192,10 @@ component("clipboard") {
      deps += [ "//ui/base:clipboard_jni_headers" ]
    }
  
@@ -585,7 +585,7 @@ e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
    void SetModalContextMenu(bool) override;
 --- a/third_party/blink/renderer/core/exported/web_view_impl.cc
 +++ b/third_party/blink/renderer/core/exported/web_view_impl.cc
-@@ -3614,6 +3614,11 @@ void WebViewImpl::UpdateRendererPreferen
+@@ -3625,6 +3625,11 @@ void WebViewImpl::UpdateRendererPreferen
        renderer_preferences_.selection_clipboard_buffer_available);
  #endif  // BUILDFLAG(IS_OZONE)
  
