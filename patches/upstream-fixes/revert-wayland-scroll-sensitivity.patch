@@ -1,0 +1,69 @@
+From b77b5ec93f72fb36c5e4f01bd90b456e6a17b9bc Mon Sep 17 00:00:00 2001
+From: Jamie Walch <jamiewalch@chromium.org>
+Date: Wed, 19 Nov 2025 14:49:19 -0800
+Subject: [PATCH] Revert "Fix touchpad scroll sensitivity on Wayland."
+
+This reverts commit ded09f2a729ad7d92f404bd9f86fac819f178f8b.
+
+Reason for revert: Users found the slower scroll speed relative to other Wayland applications to be disruptive.
+
+Original change's description:
+> Fix touchpad scroll sensitivity on Wayland.
+>
+> Chrome's scroll sensitivity with a touchpad is much higher on Wayland
+> than on other OSes. Chrome isn't alone in this--Terminal and several
+> other applications also scroll much faster than I'd expect--but one
+> notable exception is the "Test settings" page of the touchpad
+> configuration UI, the scroll sensitivity of which feels comparable to
+> using a touchpad on other OSes.
+>
+> I believe that axis events coming via `OnAxis` should not be scaled at
+> all. That feels right when using a physical touchpad, but more
+> importantly, if `ei_device_scroll_delta` is used to inject scroll
+> events, the magnitude of those events is specified in pixels. The
+> comment in `OnAxis` (that this CL deletes) mentioned wheel ticks, but
+> this CL doesn't affect wheel ticks at all, since they are delivered via
+> `OnAxis120`, which takes precedence.
+>
+> My ultimate goal is to have CRD host use `ei_device_scroll_delta` so
+> that we can support smooth scrolling. It's not currently possible due
+> to https://gitlab.freedesktop.org/libinput/libei/-/issues/88, but this
+> CL is a prerequisite. In particular, if the `OnAxis120` implementation
+> is removed in addition to this CL, then I can get the scroll distances
+> to match on client and host when Chrome Wayland is used at both ends.
+> Without this CL, Chrome running on the host scrolls 144 times too far
+> due to scroll distances being multiplied by 12 by Chrome at both ends.
+>
+> Change-Id: Id576c3a10e3dc1847ab278502b31baf51592ce55
+> Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/7004208
+> Commit-Queue: Thomas Anderson <thomasanderson@chromium.org>
+> Reviewed-by: Thomas Anderson <thomasanderson@chromium.org>
+> Auto-Submit: Jamie Walch <jamiewalch@chromium.org>
+> Cr-Commit-Position: refs/heads/main@{#1524565}
+
+Change-Id: I8245e2ee835991cdfe082a6d34cd00a25603d155
+Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/7171891
+Reviewed-by: Thomas Anderson <thomasanderson@chromium.org>
+Commit-Queue: Jamie Walch <jamiewalch@chromium.org>
+Reviewed-by: Orko Garai <orko@igalia.com>
+Cr-Commit-Position: refs/heads/main@{#1547498}
+---
+
+--- a/ui/ozone/platform/wayland/host/wayland_pointer.cc
++++ b/ui/ozone/platform/wayland/host/wayland_pointer.cc
+@@ -170,7 +170,14 @@ void WaylandPointer::OnAxis(void* data,
+                             uint32_t time,
+                             uint32_t axis,
+                             wl_fixed_t value) {
+-  const double delta = -wl_fixed_to_double(value);
++  // Wayland compositors send axis events with values in the surface coordinate
++  // space. They send a value of 10 per mouse wheel click by convention, so
++  // clients (e.g. GTK+) typically scale down by this amount to convert to
++  // discrete step coordinates. wl_pointer version 5 improves the situation by
++  // adding axis sources and discrete axis events.
++  const double kAxisValueScale = 10.0;
++  const double delta = -wl_fixed_to_double(value) / kAxisValueScale *
++                       MouseWheelEvent::kWheelDelta;
+   const auto timestamp = wl::EventMillisecondsToTimeTicks(time);
+   auto* self = static_cast<WaylandPointer*>(data);
+   self->OnAxisImpl(delta, axis, timestamp, /*is_high_resolution=*/false);

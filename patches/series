@@ -3,6 +3,7 @@ ungoogled-chromium/portablelinux/use-oauth2-client-switches-as-default.patch
 ungoogled-chromium/portablelinux/fix-compiling-on-arm64.patch
 
 upstream-fixes/respect-middle-click-paste.patch
+upstream-fixes/revert-wayland-scroll-sensitivity.patch
 
 helium/linux/change-chromium-branding.patch
 helium/linux/use-default-theme.patch
