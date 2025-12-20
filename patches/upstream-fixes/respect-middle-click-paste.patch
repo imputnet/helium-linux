@@ -58,7 +58,7 @@ e5c2d641fecb9 [Linux UI] Pass middle click paste preference to renderer
        ui::NativeTheme::GetInstanceForNativeUi()->caret_blink_interval();
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -1925,6 +1925,7 @@ void LocationBarView::OnLocationIconPres
+@@ -1927,6 +1927,7 @@ void LocationBarView::OnLocationIconPres
    }
  
    if (event.IsOnlyMiddleMouseButton() &&
