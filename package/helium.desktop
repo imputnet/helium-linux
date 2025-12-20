@@ -2,7 +2,9 @@
 Version=1.0
 Name=Helium
 GenericName=Web Browser
+GenericName[pt_BR]=Navegador da Internet
 Comment=Access the Internet
+Comment[pt_BR]=Acessar a Internet
 Exec=chromium %U
 StartupNotify=true
 StartupWMClass=helium
@@ -15,8 +17,10 @@ Actions=new-window;new-private-window;
 
 [Desktop Action new-window]
 Name=New Window
+Name[pt_BR]=Nova janela
 Exec=chromium
 
 [Desktop Action new-private-window]
 Name=New Incognito Window
+Name[pt_BR]=Nova janela anônima
 Exec=chromium --incognito
