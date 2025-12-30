@@ -62,6 +62,10 @@ cp "$_root_dir/package/helium.desktop" "$_tarball_dir"
 
 wait
 
+find "$_tarball_dir" -type f -exec file {} + \
+    | awk -F: '/ELF/ {print $1}' \
+    | xargs strip --strip-unneeded
+
 _size="$(du -sk "$_tarball_dir" | cut -f1)"
 
 pushd "$_release_dir"
