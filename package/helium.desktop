@@ -3,7 +3,7 @@ Version=1.0
 Name=Helium
 GenericName=Web Browser
 Comment=Access the Internet
-Exec=chromium %U
+Exec=helium %U
 StartupNotify=true
 StartupWMClass=helium
 Terminal=false
@@ -15,8 +15,8 @@ Actions=new-window;new-private-window;
 
 [Desktop Action new-window]
 Name=New Window
-Exec=chromium
+Exec=helium
 
 [Desktop Action new-private-window]
 Name=New Incognito Window
-Exec=chromium --incognito
+Exec=helium --incognito

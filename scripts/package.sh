@@ -33,7 +33,6 @@ chrome_100_percent.pak
 chrome_200_percent.pak
 chrome_crashpad_handler
 chromedriver
-chrome-wrapper
 icudtl.dat
 libEGL.so
 libGLESv2.so
@@ -59,8 +58,10 @@ for file in $_files; do
 done
 
 cp "$_root_dir/package/helium.desktop" "$_tarball_dir"
+cp "$_root_dir/package/helium-wrapper.sh" "$_tarball_dir/helium-wrapper"
 
 wait
+(cd "$_tarball_dir" && ln -sf helium-wrapper chrome-wrapper)
 
 _size="$(du -sk "$_tarball_dir" | cut -f1)"
 
@@ -75,7 +76,7 @@ rm -rf "$_app_dir"
 mkdir -p "$_app_dir/opt/helium/" "$_app_dir/usr/share/icons/hicolor/256x256/apps/"
 cp -r "$_tarball_dir"/* "$_app_dir/opt/helium/"
 cp "$_root_dir/package/helium.desktop" "$_app_dir"
-sed -i -e 's|Exec=chromium|Exec=AppRun|g' "$_app_dir/helium.desktop"
+sed -i -e 's|Exec=helium|Exec=AppRun|g' "$_app_dir/helium.desktop"
 
 cp "$_root_dir/package/helium-wrapper-appimage.sh" "$_app_dir/AppRun"
 
