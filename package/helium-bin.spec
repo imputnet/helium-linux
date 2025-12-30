@@ -9,8 +9,6 @@ License: GPL-3.0
 URL:     https://github.com/imputnet/helium-linux
 Source0: https://github.com/imputnet/helium-linux/releases/download/%{version}/helium-%{version}-x86_64_linux.tar.xz
 Source1: https://github.com/imputnet/helium-linux/releases/download/%{version}/helium-%{version}-arm64_linux.tar.xz
-# TODO: remove source2 once helium-wrapper is in tarballs
-Source2: helium-wrapper.sh
 
 %description
 Private, fast, and honest web browser based on Chromium
@@ -37,9 +35,6 @@ mkdir -p %{heliumdir} \
          %{buildroot}%{_datadir}/icons/hicolor/256x256/apps
 
 cp -a . %{heliumdir}
-
-# TODO: remove once helium-wrapper is in tarballs
-install -m 755 %{SOURCE2} %{heliumdir}/helium-wrapper
 
 sed -Ei "s/(CHROME_VERSION_EXTRA=).*/\1rpm/" \
     %{heliumdir}/helium-wrapper
