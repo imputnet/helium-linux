@@ -63,9 +63,15 @@ cp "$_root_dir/package/helium-wrapper.sh" "$_tarball_dir/helium-wrapper"
 wait
 (cd "$_tarball_dir" && ln -sf helium-wrapper chrome-wrapper)
 
+if command -v eu-strip >/dev/null 2>&1; then
+    _strip_cmd=eu-strip
+else
+    _strip_cmd="strip --strip-unneeded"
+fi
+
 find "$_tarball_dir" -type f -exec file {} + \
     | awk -F: '/ELF/ {print $1}' \
-    | xargs strip --strip-unneeded
+    | xargs $_strip_cmd
 
 _size="$(du -sk "$_tarball_dir" | cut -f1)"
 
