@@ -9,6 +9,7 @@ THIS="$(readlink -f "${0}")"
 HERE="$(dirname "${THIS}")"
 export LD_LIBRARY_PATH="${HERE}/usr/lib:$LD_LIBRARY_PATH"
 export CHROME_WRAPPER="${APPIMAGE:-$THIS}"
+export CHROME_VERSION_EXTRA=appimage
 
 AA_PROFILE_PATH=/etc/apparmor.d/helium-appimage
 AA_SYSFS_USERNS_PATH=/proc/sys/kernel/apparmor_restrict_unprivileged_userns
