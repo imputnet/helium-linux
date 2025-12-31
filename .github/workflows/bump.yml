@@ -14,21 +14,6 @@ jobs:
         uses: actions/checkout@v4
         with: { submodules: true, fetch-depth: 0 }
 
-      - name: Bump specfile version
-        run: |
-          set -euxo pipefail
-
-          PLATFORM_DIR="$PWD"
-          HELIUM_DIR="$PLATFORM_DIR/helium-chromium"
-          SPEC="$PLATFORM_DIR/package/helium-bin.spec"
-          VERSION=$("$HELIUM_DIR/utils/helium_version.py" \
-            --tree "$HELIUM_DIR" \
-            --platform-tree "$PLATFORM_DIR" \
-            --print)
-          
-          sed -Ei "s/^(%define version ).*/\1$VERSION/" "$SPEC"
-          git add -u "$SPEC"
-
       - name: Run bump-platform action from helium-chromium
         uses: imputnet/helium-chromium/.github/actions/bump-platform@main
         with:
