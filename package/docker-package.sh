@@ -21,7 +21,7 @@ docker buildx build --load -t "${_image}" -f "${_root_dir}/docker/package.Docker
 
 _gpg_docker_flags=()
 if [[ -n "${GPG_PRIVATE_KEY:-}" && -n "${GPG_PASSPHRASE:-}" ]]; then
-  _gpg_docker_flags=(-e GPG_PRIVATE_KEY -e GPG_PASSPHRASE)
+  _gpg_docker_flags=(-e GPG_PRIVATE_KEY -e GPG_PASSPHRASE -e SIGN_TARBALL=1)
 fi
 
 cd "${_root_dir}" && docker run --rm -i \

@@ -77,9 +77,10 @@ _size="$(du -sk "$_tarball_dir" | cut -f1)"
 
 pushd "$_release_dir"
 
+TAR_PATH="$_release_dir/$_tarball_name.tar.xz"
 tar vcf - "$_tarball_name" \
     | pv -s"${_size}k" \
-    | xz -e9 > "$_release_dir/$_tarball_name.tar.xz" &
+    | xz -e9 > "$TAR_PATH" &
 
 # create AppImage
 rm -rf "$_app_dir"
@@ -109,5 +110,10 @@ appimagetool \
     "$_release_name.AppImage" "$@" &
 popd
 wait
+
+if [ -n "${SIGN_TARBALL:-}" ]; then
+    gpg --detach-sign --passphrase "$GPG_PASSPHRASE" \
+        --output "$TAR_PATH.asc" "$TAR_PATH"
+fi
 
 rm -rf "$_tarball_dir" "$_app_dir"

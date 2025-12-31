@@ -38,4 +38,4 @@ runs:
         files: |
           release/helium-*.AppImage
           release/helium-*.AppImage.zsync
-          release/helium-*_linux.tar.xz
+          release/helium-*_linux.tar.xz*
