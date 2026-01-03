@@ -38,7 +38,9 @@ Either of these scripts will create `tar.xz` and `AppImage` files under `build/`
 By default, the build script uses tarball. If you need to use a source tree clone, you can run `scripts/docker-build.sh -c` instead. This may be useful if a tarball for a release isn't available yet.
 
 ### Signature
-As of [0.5.7.1](https://github.com/imputnet/helium-linux/releases/tag/0.5.7.1), AppImage builds are signed with the following key:
+AppImage builds (since [0.5.7.1](https://github.com/imputnet/helium-linux/releases/tag/0.5.7.1))
+and binary tarballs (since [0.7.7.2](https://github.com/imputnet/helium-linux/releases/tag/0.7.7.2))
+are signed with the following key:
 ```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Comment: BE67 7C19 89D3 5EAB 2C5F  26C9 3516 01AD 01D6 378E
