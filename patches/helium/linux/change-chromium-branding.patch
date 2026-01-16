@@ -1,6 +1,6 @@
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -1809,7 +1809,7 @@ if (is_linux || is_chromeos) {
+@@ -1810,7 +1810,7 @@ if (is_linux || is_chromeos) {
      ]
      if (is_linux) {
        sources += [
@@ -11,7 +11,7 @@
        sources +=
 --- a/chrome/common/channel_info_posix.cc
 +++ b/chrome/common/channel_info_posix.cc
-@@ -81,18 +81,13 @@ std::string GetChannelName(WithExtendedS
+@@ -78,18 +78,13 @@ std::string GetChannelName(WithExtendedS
  }
  
  std::string GetChannelSuffixForDataDir() {
@@ -34,7 +34,7 @@
  }
  
  #if BUILDFLAG(IS_LINUX)
-@@ -148,11 +143,11 @@ std::string GetDesktopName(base::Environ
+@@ -144,11 +139,11 @@ std::string GetDesktopName(base::Environ
    // Allow $CHROME_DESKTOP to override the built-in value, so that development
    // versions can set themselves as the default without interfering with
    // non-official, packaged versions using the built-in value.
