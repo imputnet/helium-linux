@@ -59,3 +59,19 @@ runs:
           build/release/helium-${{ steps.version.outputs.version }}-${{ env.ARCH }}_linux.tar.xz.asc
         if-no-files-found: error
         compression-level: 0
+
+    - name: Upload .deb artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: helium-${{ steps.version.outputs.version }}-${{ env.ARCH }}-deb
+        path: build/release/*.deb
+        if-no-files-found: error
+        compression-level: 0
+
+    - name: Upload .rpm artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: helium-${{ steps.version.outputs.version }}-${{ env.ARCH }}-rpm
+        path: build/release/*.rpm
+        if-no-files-found: error
+        compression-level: 0
