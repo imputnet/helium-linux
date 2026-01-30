@@ -61,6 +61,7 @@ cp "$_root_dir/package/helium.desktop" "$_tarball_dir"
 cp "$_root_dir/package/helium-wrapper.sh" "$_tarball_dir/helium-wrapper"
 
 wait
+(cd "$_tarball_dir" && ln -sf helium chrome)
 
 if command -v eu-strip >/dev/null 2>&1; then
     _strip_cmd=eu-strip
