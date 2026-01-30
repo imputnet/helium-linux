@@ -132,3 +132,18 @@
  #endif
  
  #if defined(DLOPEN_PULSEAUDIO)
+--- a/chrome/browser/shell_integration_linux.cc
++++ b/chrome/browser/shell_integration_linux.cc
+@@ -513,11 +513,7 @@ std::string GetProgramClassClass() {
+ }
+ 
+ std::string GetIconName() {
+-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+-  return "google-chrome";
+-#else  // BUILDFLAG(CHROMIUM_BRANDING)
+-  return "chromium-browser";
+-#endif
++  return "helium";
+ }
+ 
+ bool GetExistingShortcutContents(base::Environment* env,
