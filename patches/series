@@ -7,3 +7,4 @@ helium/linux/rename-chrome-binary.patch
 helium/linux/use-default-theme.patch
 helium/linux/fix-swipe-between-pages.patch
 helium/linux/add-middle-click-paste-flag.patch
+helium/linux/add-error-for-missing-desktop-file.patch
