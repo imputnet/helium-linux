@@ -173,7 +173,7 @@ Name[uk]=Нове вікно
 Name[vi]=Cửa sổ Mới
 Name[zh_CN]=新建窗口
 Name[zh_TW]=開新視窗
-Exec=helium
+Exec=helium %U
 
 [Desktop Action new-private-window]
 Name=New Incognito Window
