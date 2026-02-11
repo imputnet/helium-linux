@@ -87,7 +87,6 @@ rm -rf "$_app_dir"
 mkdir -p "$_app_dir/opt/helium/" "$_app_dir/usr/share/icons/hicolor/256x256/apps/"
 cp -r "$_tarball_dir"/* "$_app_dir/opt/helium/"
 cp "$_root_dir/package/helium.desktop" "$_app_dir"
-sed -i -e 's|Exec=helium|Exec=AppRun|g' "$_app_dir/helium.desktop"
 
 cp "$_root_dir/package/helium-wrapper-appimage.sh" "$_app_dir/AppRun"
 
