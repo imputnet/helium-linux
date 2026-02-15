@@ -108,7 +108,7 @@
              '--no-tools',
              '--no-runtimes',
              # PIC needed for Rust build (links LLVM into shared object)
-@@ -783,7 +786,8 @@ def main():
+@@ -789,7 +792,8 @@ def main():
          # Fetch sysroot we build rustc against. This ensures a minimum supported
          # host (not Chromium target). Since the rustc linux package is for
          # x86_64 only, that is the sole needed sysroot.
