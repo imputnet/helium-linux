@@ -1,0 +1,161 @@
+--- a/chrome/browser/shell_integration.h
++++ b/chrome/browser/shell_integration.h
+@@ -100,6 +100,11 @@ enum DefaultWebClientState {
+   // The current install mode is not default, although one of the brand's
+   // other install modes is.
+   OTHER_MODE_IS_DEFAULT,
++#if BUILDFLAG(IS_LINUX)
++  // The current environment does not make it viable to set the
++  // browser as default.
++  CANNOT_BE_DEFAULT,
++#endif
+   NUM_DEFAULT_STATES
+ };
+ 
+--- a/chrome/browser/shell_integration.cc
++++ b/chrome/browser/shell_integration.cc
+@@ -70,6 +70,9 @@ bool IsValidDefaultWebClientState(Defaul
+     case IS_DEFAULT:
+     case UNKNOWN_DEFAULT:
+     case OTHER_MODE_IS_DEFAULT:
++#if BUILDFLAG(IS_LINUX)
++    case CANNOT_BE_DEFAULT:
++#endif
+       return true;
+     case NUM_DEFAULT_STATES:
+       break;
+--- a/chrome/browser/shell_integration_linux.h
++++ b/chrome/browser/shell_integration_linux.h
+@@ -169,6 +169,10 @@ std::string GetDesktopEntryStringValueFr
+     const std::string& key,
+     const std::string& shortcut_contents);
+ 
++// Checks whether the browser .desktop file is installed in any of the
++// expected locations.
++bool HasInstalledDesktopFile(base::Environment* env);
++
+ }  // namespace internal
+ 
+ }  // namespace shell_integration_linux
+--- a/chrome/browser/shell_integration_linux.cc
++++ b/chrome/browser/shell_integration_linux.cc
+@@ -185,6 +185,9 @@ shell_integration::DefaultWebClientState
+                                                 base::BlockingType::MAY_BLOCK);
+ 
+   std::unique_ptr<base::Environment> env(base::Environment::Create());
++  if (scheme.empty() && !internal::HasInstalledDesktopFile(env.get())) {
++    return shell_integration::CANNOT_BE_DEFAULT;
++  }
+ 
+   std::vector<std::string> argv;
+   argv.push_back(kXdgSettings);
+@@ -498,6 +501,20 @@ std::string GetProgramClassClass(const b
+   return desktop_base_name;
+ }
+ 
++bool HasInstalledDesktopFile(base::Environment* env) {
++  std::string desktop_filename = chrome::GetDesktopName(env);
++  base::ScopedBlockingCall scoped_blocking_call(FROM_HERE,
++                                                base::BlockingType::MAY_BLOCK);
++
++  for (const auto& dir : base::nix::GetXDGDataSearchLocations(env)) {
++    auto file_path = dir.Append("applications").Append(desktop_filename);
++    if (base::PathExists(file_path)) {
++      return true;
++    }
++  }
++
++  return false;
++}
+ }  // namespace internal
+ 
+ std::string GetProgramClassName() {
+--- a/chrome/browser/ui/apps/chrome_app_delegate.cc
++++ b/chrome/browser/ui/apps/chrome_app_delegate.cc
+@@ -120,6 +120,9 @@ void OpenURLAfterCheckIsDefaultBrowser(
+     case shell_integration::NOT_DEFAULT:
+     case shell_integration::UNKNOWN_DEFAULT:
+     case shell_integration::OTHER_MODE_IS_DEFAULT:
++#if BUILDFLAG(IS_LINUX)
++    case shell_integration::CANNOT_BE_DEFAULT:
++#endif
+       platform_util::OpenExternal(
+ #if BUILDFLAG(IS_CHROMEOS)
+           profile,
+--- a/chrome/browser/ui/webui/settings/settings_default_browser_handler.cc
++++ b/chrome/browser/ui/webui/settings/settings_default_browser_handler.cc
+@@ -163,7 +163,11 @@ void DefaultBrowserHandler::OnDefaultChe
+   base::Value::Dict dict;
+   dict.Set("isDefault", state == shell_integration::IS_DEFAULT);
+   dict.Set("canPin", can_pin);
++#if BUILDFLAG(IS_LINUX)
++  dict.Set("canBeDefault", state != shell_integration::CANNOT_BE_DEFAULT);
++#else
+   dict.Set("canBeDefault", shell_integration::CanSetAsDefaultBrowser());
++#endif
+   dict.Set("isUnknownError", state == shell_integration::UNKNOWN_DEFAULT);
+   dict.Set("isDisabledByPolicy", DefaultBrowserIsDisabledByPolicy());
+ 
+--- a/chrome/app/settings_chromium_strings.grdp
++++ b/chrome/app/settings_chromium_strings.grdp
+@@ -129,9 +129,18 @@ Chromium understands forms better and ca
+         </message>
+       </then>
+       <else>
++      <if expr="is_linux">
++        <then>
++        <message name="IDS_SETTINGS_DEFAULT_BROWSER_SECONDARY" desc="The text displayed when Helium is launched on Linux, but has no existing .desktop file.">
++          Helium cannot be set as default, because no <ph name="DESKTOP_FILENAME">$1<ex>helium.desktop</ex></ph> file was found in any of: ~/.local/share/applications, /usr/share/applications, /usr/local/share/applications.
++        </message>
++        </then>
++        <else>
+         <message name="IDS_SETTINGS_DEFAULT_BROWSER_SECONDARY" desc="The text displayed when Chromium is installed in side-by-side mode, which does not support setting as the default browser.">
+           This is a secondary installation of Chromium, and cannot be made your default browser.
+         </message>
++        </else>
++      </if>
+       </else>
+     </if>
+   </if>
+--- a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
++++ b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+@@ -133,6 +133,7 @@
+ #endif
+ 
+ #if BUILDFLAG(IS_LINUX)
++#include "base/environment.h"
+ #include "ui/display/screen.h"
+ #endif
+ 
+@@ -710,6 +711,15 @@ void AddClearBrowsingDataStrings(content
+   html_source->AddLocalizedStrings(kLocalizedStrings);
+ }
+ 
++#if BUILDFLAG(IS_LINUX)
++std::u16string GetDefaultBrowserError() {
++  std::unique_ptr<base::Environment> env(base::Environment::Create());
++  return l10n_util::GetStringFUTF16(
++      IDS_SETTINGS_DEFAULT_BROWSER_SECONDARY,
++      base::UTF8ToUTF16(chrome::GetDesktopName(env.get())));
++}
++#endif
++
+ #if !BUILDFLAG(IS_CHROMEOS)
+ void AddDefaultBrowserStrings(content::WebUIDataSource* html_source) {
+   html_source->AddString(
+@@ -733,9 +743,15 @@ void AddDefaultBrowserStrings(content::W
+       {"defaultBrowserMakeDefaultButton",
+        IDS_SETTINGS_DEFAULT_BROWSER_MAKE_DEFAULT_BUTTON},
+       {"defaultBrowserError", IDS_SETTINGS_DEFAULT_BROWSER_ERROR},
++#if !BUILDFLAG(IS_LINUX)
+       {"defaultBrowserSecondary", IDS_SETTINGS_DEFAULT_BROWSER_SECONDARY},
++#endif
+   };
+   html_source->AddLocalizedStrings(kLocalizedStrings);
++
++#if BUILDFLAG(IS_LINUX)
++  html_source->AddString("defaultBrowserSecondary", GetDefaultBrowserError());
++#endif
+ }
+ #endif
+ 
