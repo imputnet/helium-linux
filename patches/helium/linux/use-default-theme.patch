@@ -1,6 +1,6 @@
 --- a/ui/linux/linux_ui_factory.cc
 +++ b/ui/linux/linux_ui_factory.cc
-@@ -197,22 +197,7 @@ SystemTheme GetDefaultSystemTheme() {
+@@ -184,22 +184,7 @@ SystemTheme GetDefaultSystemTheme() {
    std::unique_ptr<base::Environment> env = base::Environment::Create();
  
    switch (base::nix::GetDesktopEnvironment(env.get())) {
