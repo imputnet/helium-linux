@@ -23,6 +23,21 @@ if [ "$_arch" = "x64" ]; then
     _arch="x86_64"
 fi
 
+case "$_arch" in
+    x86_64)
+        _deb_arch="amd64"
+        _rpm_arch="x86_64"
+        ;;
+    arm64)
+        _deb_arch="arm64"
+        _rpm_arch="aarch64"
+        ;;
+    *)
+        _deb_arch="$_arch"
+        _rpm_arch="$_arch"
+        ;;
+esac
+
 _release_name="$_app_name-$_version-$_arch"
 _update_info="gh-releases-zsync|imputnet|helium-linux|latest|$_app_name-*-$_arch.AppImage.zsync"
 _tarball_name="${_release_name}_linux"
@@ -47,6 +62,54 @@ v8_context_snapshot.bin
 vk_swiftshader_icd.json
 xdg-mime
 xdg-settings"
+
+_deb_deps=(
+  libnss3
+  libnspr4
+  libgtk-3-0
+  libxss1
+  libasound2
+  libx11-xcb1
+  libdrm2
+  libgbm1
+  libxdamage1
+  libxcomposite1
+  libxcursor1
+  libxrandr2
+  libxi6
+  libatk-bridge2.0-0
+  libatspi2.0-0
+  libxcb-dri3-0
+  libxcb-dri2-0
+  libxcb-present0
+  libxkbcommon0
+  libxshmfence1
+  ca-certificates
+  fonts-liberation
+)
+
+_rpm_deps=(
+  nss
+  nspr
+  gtk3
+  libXScrnSaver
+  libX11-xcb
+  libdrm
+  mesa-libgbm
+  libXdamage
+  libXcomposite
+  libXcursor
+  libXrandr
+  libXi
+  at-spi2-atk
+  at-spi2-core
+  libxcb
+  libxkbcommon
+  libxshmfence
+  ca-certificates
+  liberation-fonts
+  alsa-lib
+)
 
 echo "copying release files and creating $_tarball_name.tar.xz"
 
@@ -107,6 +170,81 @@ appimagetool \
     -u "$_update_info" \
     "$_app_dir" \
     "$_release_name.AppImage" "$@" &
+
+
+build_fpm_pkg() {
+  local _target=$1
+  local _deps_flag=()
+  if [[ "$_target" == "deb" ]]; then
+    for d in "${_deb_deps[@]}"; do _deps_flag+=("-d" "$d"); done
+  else
+    for d in "${_rpm_deps[@]}"; do _deps_flag+=("-d" "$d"); done
+  fi
+
+  local _stage_dir=$(mktemp -d)
+  local _pkg_name="helium"
+  local _install_path="/usr/lib/$_pkg_name"
+
+  mkdir -p "$_stage_dir$_install_path"
+  cp -r "$_tarball_dir"/* "$_stage_dir$_install_path/"
+
+  # Symlink binary
+  mkdir -p "$_stage_dir/usr/bin"
+  ln -sf "$_install_path/helium" "$_stage_dir/usr/bin/helium"
+
+  # Desktop file
+  mkdir -p "$_stage_dir/usr/share/applications"
+  cp "$_root_dir/package/helium.desktop" "$_stage_dir/usr/share/applications/$_pkg_name.desktop"
+
+  # Icon
+  mkdir -p "$_stage_dir/usr/share/icons/hicolor/256x256/apps"
+  cp "$_tarball_dir/product_logo_256.png" "$_stage_dir/usr/share/icons/hicolor/256x256/apps/helium.png"
+
+  local _fpm_arch
+  if [[ "$_target" == "deb" ]]; then
+      _fpm_arch="$_deb_arch"
+  else
+      _fpm_arch="$_rpm_arch"
+  fi
+
+  local _output_pkg="${_release_dir}/${_pkg_name}_${_version}_${_target}.pkg"
+  
+  fpm -s dir -t "$_target" \
+    -n "$_pkg_name" \
+    -v "$_version" \
+    --architecture "$_fpm_arch" \
+    --url "https://helium.computer" \
+    --maintainer "Helium" \
+    --description "Helium browser" \
+    --provides "$_pkg_name" \
+    --replaces "$_pkg_name" \
+    "${_deps_flag[@]}" \
+    -C "$_stage_dir" \
+    --prefix / \
+    --package "$_output_pkg" \
+    .
+
+  # Rename to friendly extension.
+  if [[ "$_target" == "deb" ]]; then
+    local _final_pkg="${_release_dir}/${_pkg_name}-${_version}-${_deb_arch}.deb"
+    mv "$_output_pkg" "$_final_pkg"
+  else
+    local _final_pkg="${_release_dir}/${_pkg_name}-${_version}-1.${_rpm_arch}.rpm"
+    mv "$_output_pkg" "$_final_pkg"
+  fi
+
+  rm -rf "$_stage_dir"
+}
+
+if command -v fpm >/dev/null 2>&1; then
+    echo "Building .deb package..."
+    build_fpm_pkg deb &
+    echo "Building .rpm package..."
+    build_fpm_pkg rpm &
+else
+    echo "fpm not found, skipping .deb and .rpm generation"
+fi
+
 popd
 wait
 
