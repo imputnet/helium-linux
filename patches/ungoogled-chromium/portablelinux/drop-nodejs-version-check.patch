@@ -19,7 +19,7 @@ here.
 Signed-off-by: Matt Jolly <kangie@gentoo.org>
 --- a/third_party/node/node.gni
 +++ b/third_party/node/node.gni
-@@ -36,15 +36,5 @@ template("node") {
+@@ -37,15 +37,5 @@ template("node") {
        }
      }
  
@@ -37,7 +37,7 @@ Signed-off-by: Matt Jolly <kangie@gentoo.org>
  }
 --- a/third_party/protobuf/proto_library.gni
 +++ b/third_party/protobuf/proto_library.gni
-@@ -558,7 +558,6 @@ template("proto_library") {
+@@ -557,7 +557,6 @@ template("proto_library") {
                    _protoc_gen_ts_path,
                    "//tools/protoc_wrapper/protoc-gen-ts_proto.py",
                  ] + _protoc_gen_ts_runtime_deps

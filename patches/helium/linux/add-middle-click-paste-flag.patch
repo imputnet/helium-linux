@@ -46,7 +46,7 @@
    }
 --- a/ui/base/clipboard/clipboard.cc
 +++ b/ui/base/clipboard/clipboard.cc
-@@ -30,6 +30,8 @@
+@@ -29,6 +29,8 @@
  #include "url/gurl.h"
  
  #if BUILDFLAG(IS_LINUX)
@@ -55,7 +55,7 @@
  #include "ui/linux/linux_ui.h"
  #endif
  
-@@ -80,6 +82,13 @@ bool Clipboard::IsSupportedClipboardBuff
+@@ -79,6 +81,13 @@ bool Clipboard::IsSupportedClipboardBuff
  // static
  bool Clipboard::IsMiddleClickPasteEnabled() {
  #if BUILDFLAG(IS_LINUX)
@@ -71,7 +71,7 @@
    }
 --- a/ui/base/ui_base_features.cc
 +++ b/ui/base/ui_base_features.cc
-@@ -446,4 +446,6 @@ BASE_FEATURE(kStringWidthCache, base::FE
+@@ -436,4 +436,6 @@ BASE_FEATURE(kStringWidthCache, base::FE
  BASE_FEATURE(kUseClipboardStrictVirtualFileCheck,
               base::FEATURE_ENABLED_BY_DEFAULT);
  
@@ -80,7 +80,7 @@
  }  // namespace features
 --- a/ui/base/ui_base_features.h
 +++ b/ui/base/ui_base_features.h
-@@ -274,6 +274,9 @@ BASE_DECLARE_FEATURE(kStringWidthCache);
+@@ -270,6 +270,9 @@ BASE_DECLARE_FEATURE(kStringWidthCache);
  COMPONENT_EXPORT(UI_BASE_FEATURES)
  BASE_DECLARE_FEATURE(kUseClipboardStrictVirtualFileCheck);
  
