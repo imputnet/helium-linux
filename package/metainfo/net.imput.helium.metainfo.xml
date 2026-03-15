@@ -33,7 +33,9 @@
   <releases>
     <release version="0.10.5.1" date="2024-01-01" />
   </releases>
-  <developer_name>Imput Net</developer_name>
+  <developer>
+    <name>Imput Net</name>
+  </developer>
   <keywords>
     <keyword>browser</keyword>
     <keyword>web</keyword>
