@@ -9,6 +9,7 @@ License: GPL-3.0
 URL:     https://github.com/imputnet/helium-linux
 Source0: https://github.com/imputnet/helium-linux/releases/download/%{version}/helium-%{version}-x86_64_linux.tar.xz
 Source1: https://github.com/imputnet/helium-linux/releases/download/%{version}/helium-%{version}-arm64_linux.tar.xz
+Source2: net.imput.helium.metainfo.xml
 
 %description
 Private, fast, and honest web browser based on Chromium
@@ -32,6 +33,7 @@ Private, fast, and honest web browser based on Chromium
 mkdir -p %{heliumdir} \
          %{buildroot}%{_bindir} \
          %{buildroot}%{_datadir}/applications \
+         %{buildroot}%{_datadir}/metainfo \
          %{buildroot}%{_datadir}/icons/hicolor/256x256/apps
 
 cp -a . %{heliumdir}
@@ -45,6 +47,9 @@ install -m 644 product_logo_256.png \
 install -m 644 %{heliumdir}/helium.desktop \
     %{buildroot}%{_datadir}/applications/
 
+install -m 644 %{SOURCE2} \
+    %{buildroot}%{_datadir}/metainfo/net.imput.helium.metainfo.xml
+
 ln -sf %{helium_base}/helium-wrapper \
     %{buildroot}%{_bindir}/helium
 
@@ -53,6 +58,7 @@ ln -sf %{helium_base}/helium-wrapper \
 %{helium_base}/
 %{_bindir}/helium
 %{_datadir}/applications/helium.desktop
+%{_datadir}/metainfo/net.imput.helium.metainfo.xml
 %{_datadir}/icons/hicolor/256x256/apps/helium.png
 
 %post
