@@ -111,8 +111,13 @@ appimagetool \
 popd
 wait
 
+if [ "${MAKE_DEB:-0}" = 1 ]; then
+    "$_root_dir/package/mkdeb.sh" "$TAR_PATH"
+fi
+
 if [ -n "${SIGN_TARBALL:-}" ]; then
-    gpg --detach-sign --passphrase "$GPG_PASSPHRASE" \
+    gpg --batch --pinentry-mode loopback \
+        --detach-sign --passphrase "$GPG_PASSPHRASE" \
         --output "$TAR_PATH.asc" "$TAR_PATH"
 fi
 

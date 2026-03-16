@@ -32,7 +32,7 @@ Running `scripts/build.sh` directly will not work unless you're running a Debian
 ### Packaging
 After building, run `scripts/package.sh`. Alternatively, you can run `package/docker-package.sh` to build inside a Docker image. Either of these scripts will create `tar.xz` and `AppImage` files under `build/`.
 
-Either of these scripts will create `tar.xz` and `AppImage` files under `build/`.
+If you would like to also generate a .deb file, you can set `MAKE_DEB=1` when running the release script.
 
 ### Development
 By default, the build script uses tarball. If you need to use a source tree clone, you can run `scripts/docker-build.sh -c` instead. This may be useful if a tarball for a release isn't available yet.

@@ -10,15 +10,20 @@ URL:     https://github.com/imputnet/helium-linux
 Source0: https://github.com/imputnet/helium-linux/releases/download/%{version}/helium-%{version}-x86_64_linux.tar.xz
 Source1: https://github.com/imputnet/helium-linux/releases/download/%{version}/helium-%{version}-arm64_linux.tar.xz
 
+%if 0%{?debbuild}
+Packager: imput <helium@imput.net>
+Provides: www-browser
+%endif
+
 %description
 Private, fast, and honest web browser based on Chromium
 
 %prep
-%ifarch x86_64
+%ifarch x86_64 amd64
 %setup -q -n helium-%{version}-x86_64_linux
 %endif
 
-%ifarch aarch64
+%ifarch aarch64 arm64
 %setup -q -T -b 1 -n helium-%{version}-arm64_linux
 %endif
 
@@ -36,8 +41,13 @@ mkdir -p %{heliumdir} \
 
 cp -a . %{heliumdir}
 
+%if 0%{?debbuild}
+sed -Ei "s/(CHROME_VERSION_EXTRA=).*/\1deb/" \
+    %{heliumdir}/helium-wrapper
+%else
 sed -Ei "s/(CHROME_VERSION_EXTRA=).*/\1rpm/" \
     %{heliumdir}/helium-wrapper
+%endif
 
 install -m 644 product_logo_256.png \
     %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/helium.png
@@ -73,8 +83,8 @@ if [ $1 -eq 0 ] ; then
     /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
     if [ -f /etc/apparmor.d/helium-bin ]; then
-        rm -f /etc/apparmor.d/helium-bin
         apparmor_parser -R helium-bin || :
+        rm -f /etc/apparmor.d/helium-bin
     fi
 fi
 
@@ -82,4 +92,6 @@ fi
 /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
 %changelog
+%if "%{_vendor}" != "debbuild"
 %autochangelog
+%endif
