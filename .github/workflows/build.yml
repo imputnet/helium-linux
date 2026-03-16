@@ -1,4 +1,4 @@
-name: Build Linux AppImage for Helium
+name: Build Linux release
 on:
   workflow_dispatch:
     inputs:
