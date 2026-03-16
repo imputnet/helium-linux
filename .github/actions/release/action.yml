@@ -25,6 +25,13 @@ runs:
         path: ./release/
         merge-multiple: true
 
+    - name: Download .deb artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: helium-*-deb
+        path: ./release/
+        merge-multiple: true
+
     - name: List release files
       shell: bash
       run: ls -la release/
@@ -63,3 +70,4 @@ runs:
           release/helium-*.AppImage
           release/helium-*.AppImage.zsync
           release/helium-*_linux.tar.xz*
+          release/helium-bin_*.deb
