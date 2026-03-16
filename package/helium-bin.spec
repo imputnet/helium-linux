@@ -60,12 +60,22 @@ ln -sf %{helium_base}/helium-wrapper \
 /usr/bin/update-desktop-database &> /dev/null || :
 /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 
+if [ -d /etc/apparmor.d ]; then
+    cp %{helium_base}/apparmor.cfg /etc/apparmor.d/helium-bin
+    apparmor_parser -r /etc/apparmor.d/helium-bin || :
+fi
+
 %postun
 # Refresh icon cache and update desktop database
 /usr/bin/update-desktop-database &> /dev/null || :
 if [ $1 -eq 0 ] ; then
     /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null
     /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+
+    if [ -f /etc/apparmor.d/helium-bin ]; then
+        rm -f /etc/apparmor.d/helium-bin
+        apparmor_parser -R helium-bin || :
+    fi
 fi
 
 %posttrans
