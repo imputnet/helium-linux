@@ -58,6 +58,7 @@ for file in $_files; do
 done
 
 cp "$_root_dir/package/helium.desktop" "$_tarball_dir"
+cp "$_root_dir/package/apparmor.cfg" "$_tarball_dir"
 cp "$_root_dir/package/helium-wrapper.sh" "$_tarball_dir/helium-wrapper"
 
 wait
