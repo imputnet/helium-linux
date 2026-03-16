@@ -3,7 +3,7 @@
   <id>net.imput.helium</id>
   <launchable type="desktop-id">helium.desktop</launchable>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-3.0</project_license>
+  <project_license>GPL-3.0-only</project_license>
   <name>Helium</name>
   <summary>Private, fast, and honest web browser</summary>
   <description>
@@ -37,7 +37,7 @@
     <release version="0.10.5.1" date="2026-03-14" />
   </releases>
   <developer>
-    <name>Imput Net</name>
+    <name>imput</name>
   </developer>
   <keywords>
     <keyword>browser</keyword>
