@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
   <id>net.imput.helium</id>
   <launchable type="desktop-id">helium.desktop</launchable>
@@ -24,19 +24,23 @@
   <url type="homepage">https://github.com/imputnet/helium-linux</url>
   <url type="bugtracker">https://github.com/imputnet/helium-linux/issues</url>
   <url type="help">https://github.com/imputnet/helium-linux</url>
-  <!--
-  Placeholder for screenshots
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/imputnet/helium-linux/main/logo.png</image>
+      <caption>Kagi search results showing web pages and videos</caption>
+      <image
+            >https://raw.githubusercontent.com/imputnet/helium-linux/refs/heads/main/package/screenshots/kagi-search.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Viewing Wikipedia articles with image galleries</caption>
+      <image
+            >https://raw.githubusercontent.com/imputnet/helium-linux/refs/heads/main/package/screenshots/wikipedia-gecko.png</image>
     </screenshot>
   </screenshots>
-  -->
   <content_rating type="oars-1.1" />
   <releases>
     <release version="0.10.5.1" date="2026-03-14" />
   </releases>
-  <developer>
+  <developer id="net.imput">
     <name>imput</name>
   </developer>
   <keywords>
