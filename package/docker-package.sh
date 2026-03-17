@@ -8,6 +8,7 @@ _git_submodule="helium-chromium"
 _image="helium-chromium-trixie-slim:packager"
 _user_uidgid="$(id -u):$(id -g)"
 _docker_image_args=()
+_make_deb=${MAKE_DEB:-0}
 
 if [ "$_user_uidgid" != "0:0" ]; then
     _docker_image_args+=(--build-arg "UID=$(id -u)")
@@ -30,5 +31,6 @@ cd "${_root_dir}" && docker run --rm -i \
     -e APPIMAGE_EXTRACT_AND_RUN=1 \
     -e HOME=/home/builder \
     -e GNUPGHOME=/home/builder/.gnupg \
+    -e MAKE_DEB=$_make_deb \
     -v "${_root_dir}:/repo" \
     "${_image}" bash "/repo/scripts/package.sh" "$@"

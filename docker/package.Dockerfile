@@ -8,7 +8,16 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt -y update && apt -y upgrade
 
 ## Install system dependencies
-RUN apt -y install binutils elfutils desktop-file-utils dpkg file imagemagick wget xz-utils pv curl jq python3 zsync gnupg
+RUN apt -y install binutils elfutils desktop-file-utils dpkg dpkg-dev fakeroot file git imagemagick wget xz-utils pv curl jq python3 zsync gnupg perl make liblocale-gettext-perl
+
+## Install debbuild for .deb packaging
+RUN git clone --depth 1 --branch 24.12.0 https://github.com/debbuild/debbuild.git /tmp/debbuild \
+    && cd /tmp/debbuild \
+    && git checkout 65c140bf902aa4860709a899a0f197fd7aa05e56 \
+    && perl configure --prefix=/usr \
+    && make \
+    && make install \
+    && rm -rf /tmp/debbuild
 
 RUN curl -s https://api.github.com/repos/AppImage/appimagetool/releases/tags/1.9.0 \
     | jq -r '.assets[].browser_download_url' \
