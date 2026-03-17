@@ -28,12 +28,12 @@
     <screenshot type="default">
       <caption>Kagi search results showing web pages and videos</caption>
       <image
-            >https://raw.githubusercontent.com/imputnet/helium-linux/refs/heads/main/package/screenshots/kagi-search.png</image>
+            >https://raw.githubusercontent.com/imputnet/helium-linux/refs/heads/main/package/screenshots/lead.png</image>
     </screenshot>
     <screenshot>
       <caption>Viewing Wikipedia articles with image galleries</caption>
       <image
-            >https://raw.githubusercontent.com/imputnet/helium-linux/refs/heads/main/package/screenshots/wikipedia-gecko.png</image>
+            >https://raw.githubusercontent.com/imputnet/helium-linux/refs/heads/main/package/screenshots/split-view.png</image>
     </screenshot>
   </screenshots>
   <content_rating type="oars-1.1" />
