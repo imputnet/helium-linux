@@ -46,5 +46,11 @@ respecting distribution-specific conventions.
 ## Security
 - Packages MUST NOT add default arguments that weaken the security of
   Helium, including but not limited to `--no-sandbox`.
+- Packages MUST NOT be built with disabled build-time security features
+  (e.g. `is_cfi=false`).
+
+## Bonus points/nice-to-haves
+- If built from source, the release is built with PGO (`chrome_pgo_phase=2`).
+- If built from source, symbols are stripped (and maybe shipped separately).
 - Packagers are encouraged to provide MAC security profiles where
   applicable for enhanced security.
