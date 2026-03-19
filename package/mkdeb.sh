@@ -5,6 +5,7 @@ _current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 _root_dir="$(cd "$_current_dir/.." && pwd)"
 _release_dir="$_root_dir/build/release"
 _spec="$_root_dir/package/helium-bin.spec"
+_metainfo_file="$_root_dir/package/net.imput.helium.metainfo.xml"
 
 _version=$(python3 "$_root_dir/helium-chromium/utils/helium_version.py" \
                    --tree "$_root_dir/helium-chromium" \
@@ -28,7 +29,7 @@ _debbuild_dir=$(mktemp -d)
 trap 'rm -rf "$_debbuild_dir"' EXIT
 
 mkdir -p "$_debbuild_dir"/{BUILD,SOURCES,SPECS,DEBS}
-ln -s "$_tarball" "$_debbuild_dir/SOURCES/"
+ln -s "$_tarball" "$_metainfo_file" "$_debbuild_dir/SOURCES/"
 cp "$_spec" "$_debbuild_dir/SPECS/"
 
 debbuild \
