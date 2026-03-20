@@ -197,24 +197,14 @@ setup_toolchain() {
 
     mkdir -p "${_src_dir}/third_party/node/linux/node-linux-x64/bin"
     ln -sf "$(which node)" "${_src_dir}/third_party/node/linux/node-linux-x64/bin/node"
-
-    local clang_bin="${_src_dir}/third_party/llvm-build/Release+Asserts/bin"
-    export CC="${clang_bin}/clang"
-    export CXX="${clang_bin}/clang++"
-    export AR="${clang_bin}/llvm-ar"
-    export NM="${clang_bin}/llvm-nm"
-    export LLVM_BIN="${clang_bin}"
-
-    local resource_dir
-    resource_dir="$(${CC%% *} --print-resource-dir)"
-    export CXXFLAGS+=" -resource-dir=${resource_dir} -B${LLVM_BIN}"
-    export CPPFLAGS+=" -resource-dir=${resource_dir} -B${LLVM_BIN}"
-    export CFLAGS+=" -resource-dir=${resource_dir} -B${LLVM_BIN}"
 }
 
 gn_gen() {
     cd "${_src_dir}"
-    ./tools/gn/bootstrap/bootstrap.py -o out/Default/gn --skip-generate-buildfiles
+    local clang_bin="${_src_dir}/third_party/llvm-build/Release+Asserts/bin"
+    CXX="$clang_bin/clang++" ./tools/gn/bootstrap/bootstrap.py \
+        -o out/Default/gn \
+        --skip-generate-buildfiles
     ./out/Default/gn gen out/Default --fail-on-unused-args
 }
 
