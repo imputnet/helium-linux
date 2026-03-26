@@ -7,7 +7,7 @@ We currently offer x86_64/amd64 and arm64/aarch64 builds.
 
 ### Ubuntu/Debian (.deb)
 ```bash
-curl -fsSL https://pkg.helium.computer/deb/key.gpg | sudo tee /usr/share/keyrings/helium.gpg > /dev/null
+curl -fsSL https://raw.githubusercontent.com/imputnet/helium-linux/main/pubkey.asc | sudo gpg --dearmor -o /usr/share/keyrings/helium.gpg
 echo "deb [signed-by=/usr/share/keyrings/helium.gpg] https://pkg.helium.computer/deb stable main" | sudo tee /etc/apt/sources.list.d/helium.list
 sudo apt update && sudo apt install helium-bin
 ```
@@ -60,8 +60,9 @@ If you would like to also generate a .deb file, you can set `MAKE_DEB=1` when ru
 By default, the build script uses tarball. If you need to use a source tree clone, you can run `scripts/docker-build.sh -c` instead. This may be useful if a tarball for a release isn't available yet.
 
 ### Signature
-AppImage builds (since [0.5.7.1](https://github.com/imputnet/helium-linux/releases/tag/0.5.7.1))
-and binary tarballs (since [0.7.7.2](https://github.com/imputnet/helium-linux/releases/tag/0.7.7.2))
+AppImage builds (since [0.5.7.1](https://github.com/imputnet/helium-linux/releases/tag/0.5.7.1)),
+binary tarballs (since [0.7.7.2](https://github.com/imputnet/helium-linux/releases/tag/0.7.7.2)),
+and the .deb repository (since [0.10.7.1](https://github.com/imputnet/helium-linux/releases/tag/0.10.7.1))
 are signed with the following key:
 ```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
