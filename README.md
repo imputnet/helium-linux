@@ -1,5 +1,27 @@
 # helium-linux
-Portable Linux (`.AppImage`) packaging for [Helium](https://github.com/imputnet/helium).
+Linux builds and packaging for [Helium](https://github.com/imputnet/helium).
+
+## Downloads
+Helium is available in multiple formats depending on your distribution.
+We currently offer x86_64/amd64 and arm64/aarch64 builds.
+
+### Ubuntu/Debian (.deb)
+```bash
+curl -fsSL https://pkg.helium.computer/deb/key.gpg | sudo tee /usr/share/keyrings/helium.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/helium.gpg] https://pkg.helium.computer/deb stable main" | sudo tee /etc/apt/sources.list.d/helium.list
+sudo apt update && sudo apt install helium-bin
+```
+*(For prerelease builds, replace `stable` with `prerelease`.)*
+
+### Fedora (.rpm)
+We have a [Copr repo](https://copr.fedorainfracloud.org/coprs/imput/helium/):
+```bash
+sudo dnf copr enable imput/helium
+sudo dnf install helium-bin
+```
+
+### AppImage and tarballs
+You can download the latest release [here](https://github.com/imputnet/helium-linux/releases/latest).
 
 ## Credits
 This repo is based on
