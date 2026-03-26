@@ -1,0 +1,129 @@
+name: Update deb repo
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install reprepro
+        run: sudo apt-get update && sudo apt-get install -y reprepro
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          mkdir -p ~/.gnupg
+          echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
+          gpg-connect-agent reloadagent /bye
+          echo "$GPG_PRIVATE_KEY" \
+            | gpg --batch --pinentry-mode loopback \
+                  --passphrase "$GPG_PASSPHRASE" --import
+
+          # preset passphrase in agent so reprepro can sign
+          gpg --list-secret-keys --with-keygrip --with-colons \
+            | awk -F: '/grp/{print $10}' \
+            | while read -r keygrip; do
+                /usr/lib/gnupg/gpg-preset-passphrase \
+                  --preset --passphrase "$GPG_PASSPHRASE" "$keygrip"
+              done
+
+      - name: Set up reprepro
+        run: |
+          mkdir -p repo/conf
+
+          cat > repo/conf/distributions <<'EOF'
+          Origin: imput
+          Label: Helium
+          Description: Helium .deb repository
+          Codename: stable
+          Architectures: amd64 arm64
+          Components: main
+          SignWith: default
+
+          Origin: imput
+          Label: Helium
+          Description: Helium .deb repository
+          Codename: prerelease
+          Architectures: amd64 arm64
+          Components: main
+          SignWith: default
+          EOF
+
+          cat > repo/conf/options <<'EOF'
+          verbose
+          basedir .
+          EOF
+
+      - name: Download and add .deb packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd repo
+
+          stable_tag=$(
+            gh release list \
+              --repo "$GITHUB_REPOSITORY" \
+              --exclude-pre-releases \
+              --limit 1 \
+              --json tagName \
+              --jq '.[0].tagName'
+          )
+
+          prerelease_tag=$(
+            gh release list \
+              --repo "$GITHUB_REPOSITORY" \
+              --limit 1 \
+              --json tagName \
+              --jq '.[0].tagName'
+          )
+
+          if [ -z "$stable_tag" ] || [ "$stable_tag" = "null" ]; then
+            echo "::error::No stable release found"
+            exit 1
+          fi
+
+          if [ -z "$prerelease_tag" ] || [ "$prerelease_tag" = "null" ]; then
+            echo "::error::No release found"
+            exit 1
+          fi
+
+          echo "::group::Adding stable ($stable_tag)"
+          mkdir -p /tmp/stable
+          gh release download "$stable_tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "*.deb" \
+            --dir /tmp/stable
+          for deb in /tmp/stable/*.deb; do
+            reprepro -S web includedeb stable "$deb"
+          done
+          echo "::endgroup::"
+
+          echo "::group::Adding prerelease ($prerelease_tag)"
+          mkdir -p /tmp/prerelease
+          gh release download "$prerelease_tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "*.deb" \
+            --dir /tmp/prerelease
+          for deb in /tmp/prerelease/*.deb; do
+            reprepro -S web includedeb prerelease "$deb"
+          done
+          echo "::endgroup::"
+
+      - name: Create artifact
+        run: |
+          rm -rf repo/conf repo/db
+          tar -czf deb-repo.tar.gz -C repo .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: deb-repo
+          path: deb-repo.tar.gz
+          archive: false
