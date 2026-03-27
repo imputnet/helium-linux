@@ -5,6 +5,7 @@ Name:    helium-bin
 Summary: Private, fast, and honest web browser
 Version: %{version}
 Release: 1%{?dist}
+Group:   web
 License: GPL-3.0
 URL:     https://github.com/imputnet/helium-linux
 Source0: https://github.com/imputnet/helium-linux/releases/download/%{version}/helium-%{version}-x86_64_linux.tar.xz
