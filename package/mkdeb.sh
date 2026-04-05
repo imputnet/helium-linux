@@ -32,6 +32,19 @@ mkdir -p "$_debbuild_dir"/{BUILD,SOURCES,SPECS,DEBS}
 ln -s "$_tarball" "$_metainfo_file" "$_debbuild_dir/SOURCES/"
 cp "$_spec" "$_debbuild_dir/SPECS/"
 
+# sanity check for shared libs
+_tmpbin=$(mktemp)
+trap 'rm -rf "$_debbuild_dir"; rm -f "$_tmpbin"' EXIT
+tar -xOf "$_tarball" --strip-components=1 --wildcards '*/helium' > "$_tmpbin"
+_missing="$(ldd "$_tmpbin" 2>&1 | grep 'not found' || true)"
+rm -f "$_tmpbin"
+
+if [ -n "$_missing" ]; then
+    echo "error: unresolved shared libraries found:" >&2
+    echo "$_missing" >&2
+    exit 1
+fi
+
 debbuild \
     --define "_topdir $_debbuild_dir" \
     --define "debbuild 1" \

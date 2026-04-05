@@ -10,6 +10,14 @@ RUN apt -y update && apt -y upgrade
 ## Install system dependencies
 RUN apt -y install binutils elfutils desktop-file-utils dpkg dpkg-dev fakeroot file git imagemagick wget xz-utils pv curl jq python3 zsync gnupg perl make liblocale-gettext-perl
 
+## Install Chromium runtime libraries for debbuild resolution
+RUN apt -y install --no-install-recommends \
+    libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 \
+    libcairo2 libcups2t64 libdbus-1-3 libdrm2 libexpat1 libgbm1 \
+    libglib2.0-0t64 libgtk-3-0t64 libnspr4 libnss3 libpango-1.0-0 \
+    libudev1 libvulkan1 libx11-6 libxcb1 libxcomposite1 libxdamage1 \
+    libxext6 libxfixes3 libxkbcommon0 libxrandr2
+
 ## Install debbuild for .deb packaging
 RUN git clone --depth 1 --branch 24.12.0 https://github.com/debbuild/debbuild.git /tmp/debbuild \
     && cd /tmp/debbuild \
