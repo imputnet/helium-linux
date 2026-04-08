@@ -11,7 +11,7 @@ RUN apt-get -y update && apt-get -y upgrade
 # install latest nodejs lts version
 RUN apt-get install -y apt-transport-https ca-certificates curl gnupg &&\
   curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-RUN apt-get -y update && apt-get -y install nodejs && npm update -g npm
+RUN apt-get -y update && apt-get -y install nodejs
 
 # needed to be able to compile LLVM
 RUN if [ "$(uname -m)" != x86_64 ]; then \
