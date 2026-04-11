@@ -17,6 +17,17 @@ Packager: imput <helium@imput.net>
 Provides: www-browser
 %endif
 
+# Based on chrome/installer/linux/{debian,rpm}/additional_deps
+# We do not recommend libgtk* because we don't use it by default.
+# If the user wants GTK, they can install the relevant lib
+# (and they already likely have them installed by default on a desktop install anyways).
+Recommends: ca-certificates, xdg-utils
+%if 0%{?debbuild}
+Recommends: fonts-liberation, libvulkan1
+%else
+Recommends: liberation-fonts, vulkan-loader
+%endif
+
 %description
 Private, fast, and honest web browser based on Chromium
 
