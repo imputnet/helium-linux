@@ -54,7 +54,7 @@
  #include "ui/linux/linux_ui.h"
  #endif
  
-@@ -79,6 +81,13 @@ bool Clipboard::IsSupportedClipboardBuff
+@@ -80,6 +82,13 @@ bool Clipboard::IsSupportedClipboardBuff
  // static
  bool Clipboard::IsMiddleClickPasteEnabled() {
  #if BUILDFLAG(IS_LINUX)
@@ -70,18 +70,18 @@
    }
 --- a/ui/base/ui_base_features.cc
 +++ b/ui/base/ui_base_features.cc
-@@ -436,4 +436,6 @@ BASE_FEATURE(kStringWidthCache, base::FE
- BASE_FEATURE(kUseClipboardStrictVirtualFileCheck,
-              base::FEATURE_ENABLED_BY_DEFAULT);
+@@ -456,4 +456,6 @@ BASE_FEATURE_PARAM(int,
+                    "acceptable_latency_ms",
+                    50);
  
 +BASE_FEATURE(kMiddleClickPasteEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
 +
  }  // namespace features
 --- a/ui/base/ui_base_features.h
 +++ b/ui/base/ui_base_features.h
-@@ -270,6 +270,9 @@ BASE_DECLARE_FEATURE(kStringWidthCache);
+@@ -294,6 +294,9 @@ BASE_DECLARE_FEATURE_PARAM(int, kCompens
  COMPONENT_EXPORT(UI_BASE_FEATURES)
- BASE_DECLARE_FEATURE(kUseClipboardStrictVirtualFileCheck);
+ BASE_DECLARE_FEATURE_PARAM(int, kCompensationAcceptableLatencyMs);
  
 +COMPONENT_EXPORT(UI_BASE_FEATURES)
 +BASE_DECLARE_FEATURE(kMiddleClickPasteEnabled);
