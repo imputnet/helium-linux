@@ -1,6 +1,6 @@
 --- a/components/crash/core/app/BUILD.gn
 +++ b/components/crash/core/app/BUILD.gn
-@@ -240,6 +240,7 @@ if (is_mac || is_android || is_linux ||
+@@ -242,6 +242,7 @@ if (is_mac || is_android || is_linux ||
    # We build a chromium-specific crashpad_handler executable so that we can
    # define custom UserStreamDataSources.
    executable("chrome_crashpad_handler") {
@@ -41,7 +41,7 @@
    }
  
    executable("chrome_initial") {
-@@ -1694,19 +1694,19 @@ if (is_linux || is_chromeos) {
+@@ -1704,19 +1704,19 @@ if (is_linux || is_chromeos) {
        }
      }
      extract_symbols("chrome_symbols") {
@@ -67,7 +67,7 @@
          # GYP used "ia32" so keep that naming for back-compat.
 --- a/chrome/installer/linux/BUILD.gn
 +++ b/chrome/installer/linux/BUILD.gn
-@@ -30,10 +30,8 @@ declare_args() {
+@@ -32,10 +32,8 @@ declare_args() {
  assert(is_linux)
  
  packaging_files_executables = [
@@ -80,7 +80,7 @@
  ]
  
  packaging_files_shlibs = []
-@@ -170,12 +168,12 @@ action("merge_rpm_dependencies") {
+@@ -172,12 +170,12 @@ action("merge_rpm_dependencies") {
  }
  
  strip_binary("strip_chrome_binary") {
