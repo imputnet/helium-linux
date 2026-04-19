@@ -29,7 +29,7 @@ We offer builds for `x86_64/amd64` and `arm64/aarch64` platforms.
 
 1. Add Helium's repo:
     ```bash
-    echo "deb [signed-by=/usr/share/keyrings/helium.gpg] https://pkg.helium.computer/deb stable main" | sudo tee /etc/apt/sources.list.d/helium.list
+    echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/helium.gpg] https://pkg.helium.computer/deb stable main" | sudo tee /etc/apt/sources.list.d/helium.list
     ```
     For prerelease builds, replace `stable` with `prerelease`
 
