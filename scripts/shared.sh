@@ -2,11 +2,17 @@
 
 # shared build functions used by local and CI scripts
 
+# capture script directory at source-time (before entering functions)
+# BASH_SOURCE works in bash, ${0:a:h} works in zsh
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    _scripts_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+else
+    _scripts_dir="${0:a:h}"
+fi
+
 # resolve repo root directory regardless of caller location
 repo_root() {
-    local _base_dir
-    _base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-    cd "${_base_dir}/.." >/dev/null 2>&1 && pwd
+    cd "${_scripts_dir}/.." >/dev/null 2>&1 && pwd
 }
 
 setup_arch() {

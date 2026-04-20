@@ -13,6 +13,43 @@ export QUILT_PATCHES="$_root_dir/patches"
 export QUILT_SERIES="$QUILT_PATCHES/series.merged"
 alias quilt='quilt --quiltrc -'
 
+___helium_exit() {
+    # restore PS1
+    if [ -n "${__helium_orig_ps1+x}" ]; then
+        PS1="$__helium_orig_ps1"
+        unset __helium_orig_ps1
+    fi
+
+    # unset functions from dev.sh
+    unset -f he __helium_menu ___helium_exit \
+        ___helium_setup_gn ___helium_info_pull ___helium_setup \
+        ___helium_reset ___helium_name_substitution ___helium_substitution \
+        ___helium_build ___helium_run ___helium_pull \
+        ___helium_patches_op ___helium_quilt_push ___helium_quilt_pop
+
+    # unset functions from shared.sh
+    unset -f repo_root setup_arch setup_paths setup_environment \
+        fetch_sources apply_patches apply_domsub helium_substitution \
+        helium_version helium_resources write_gn_args fix_tool_downloading \
+        setup_toolchain gn_gen build
+
+    # unset variables
+    unset _scripts_dir _root_dir _main_repo _build_dir _dl_cache \
+        _src_dir _out_dir _subs_cache _namesubs_cache \
+        _host_arch _build_arch _has_pgo __helium_loaded REPO_ROOT
+
+    # unset quilt variables
+    unset QUILT_PATCHES QUILT_SERIES \
+        QUILT_PUSH_ARGS QUILT_DIFF_OPTS QUILT_PATCH_OPTS \
+        QUILT_DIFF_ARGS QUILT_REFRESH_ARGS QUILT_COLORS \
+        QUILT_SERIES_ARGS QUILT_PATCHES_ARGS QUILT_PAGER
+
+    # remove alias
+    unalias quilt 2>/dev/null
+
+    echo "helium dev environment deactivated" >&2
+}
+
 ___helium_setup_gn() {
     SCCACHE_ENABLED=y write_gn_args
     echo 'devtools_skip_typecheck = false' | tee -a "${_out_dir}/args.gn"
@@ -166,8 +203,9 @@ __helium_menu() {
         pop) ___helium_quilt_pop;;
         resources) helium_resources;;
         reset) ___helium_reset;;
+        exit) ___helium_exit;;
         *)
-            echo "usage: he (setup | build | run | sub | unsub | namesub | nameunsub | merge | unmerge | push | pop | pull | reset)" >&2
+            echo "usage: he (setup | build | run | sub | unsub | namesub | nameunsub | merge | unmerge | push | pop | pull | reset | exit)" >&2
             echo "\tsetup - sets up the dev environment for the first itme" >&2
             echo "\tbuild - prepares a development build binary" >&2
             echo "\trun - runs a development build of helium with dev data dir & ui devtools enabled" >&2
@@ -182,11 +220,16 @@ __helium_menu() {
             echo "\tresources - copies helium resources (such as icons)" >&2
             echo "\tpull - undoes all patches, pulls, redoes all patches" >&2
             echo "\treset - nukes everything" >&2
+            echo "\texit - deactivate the dev environment" >&2
     esac
 }
 
 he() {
-    (__helium_menu "$@")
+    if [ "$1" = "exit" ]; then
+        ___helium_exit
+    else
+        (__helium_menu "$@")
+    fi
 }
 
 if ! (return 0 2>/dev/null); then
@@ -195,6 +238,7 @@ if ! (return 0 2>/dev/null); then
 else
     if [ "${__helium_loaded:-}" = "" ]; then
         __helium_loaded=1
+        __helium_orig_ps1="$PS1"
         PS1="🎈 $PS1"
     fi
 fi
