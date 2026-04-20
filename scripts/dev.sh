@@ -166,8 +166,9 @@ __helium_menu() {
         pop) ___helium_quilt_pop;;
         resources) helium_resources;;
         reset) ___helium_reset;;
+        translate) helium_apply_translations;;
         *)
-            echo "usage: he (setup | build | run | sub | unsub | namesub | nameunsub | merge | unmerge | push | pop | pull | reset)" >&2
+            echo "usage: he (setup | build | run | sub | unsub | namesub | nameunsub | merge | unmerge | push | pop | pull | reset | translate)" >&2
             echo "\tsetup - sets up the dev environment for the first itme" >&2
             echo "\tbuild - prepares a development build binary" >&2
             echo "\trun - runs a development build of helium with dev data dir & ui devtools enabled" >&2
@@ -182,6 +183,7 @@ __helium_menu() {
             echo "\tresources - copies helium resources (such as icons)" >&2
             echo "\tpull - undoes all patches, pulls, redoes all patches" >&2
             echo "\treset - nukes everything" >&2
+            echo "\ttranslate - apply translations from i18n folder" >&2
     esac
 }
 
