@@ -121,6 +121,10 @@ helium_substitution() {
         -t "$_src_dir" --backup-path "$_namesubs_cache"
 }
 
+helium_apply_translations() {
+    python3 "$_main_repo/utils/i18n_apply.py" -t "$_src_dir"
+}
+
 helium_version() {
     python3 "$_main_repo/utils/helium_version.py" \
         --tree "$_main_repo" \

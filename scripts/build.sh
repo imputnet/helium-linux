@@ -22,6 +22,7 @@ fetch_sources "$clone" "$with_pgo"
 apply_patches
 apply_domsub
 helium_substitution
+helium_apply_translations
 helium_version
 helium_resources
 write_gn_args
