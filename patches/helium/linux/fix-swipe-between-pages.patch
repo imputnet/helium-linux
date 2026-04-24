@@ -1,6 +1,6 @@
 --- a/content/common/features.cc
 +++ b/content/common/features.cc
-@@ -704,7 +704,7 @@ BASE_FEATURE_PARAM(bool,
+@@ -724,7 +724,7 @@ BASE_FEATURE_PARAM(bool,
  // Allows swipe left/right from touchpad change browser navigation. Currently
  // only enabled by default on CrOS and Windows.
  BASE_FEATURE(kTouchpadOverscrollHistoryNavigation,
