@@ -1,6 +1,6 @@
 --- a/chrome/browser/ui/views/frame/browser_view.cc
 +++ b/chrome/browser/ui/views/frame/browser_view.cc
-@@ -1433,9 +1433,9 @@ bool BrowserView::GetTabStripVisible() c
+@@ -1438,9 +1438,9 @@ bool BrowserView::GetTabStripVisible() c
  }
  
  bool BrowserView::ShouldDrawTabStrokes() const {
