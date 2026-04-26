@@ -2,7 +2,7 @@ ungoogled-chromium/portablelinux/drop-nodejs-version-check.patch
 ungoogled-chromium/portablelinux/use-oauth2-client-switches-as-default.patch
 ungoogled-chromium/portablelinux/fix-compiling-on-arm64.patch
 
-helium/linux/middle-click-tab-strip-opens-new-tab.patch
+helium/linux/middle-click-empty-tabstrip-opens-new-tab.patch
 helium/linux/change-chromium-branding.patch
 helium/linux/rename-chrome-binary.patch
 helium/linux/use-default-theme.patch
