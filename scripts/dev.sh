@@ -1,10 +1,16 @@
 # shellcheck disable=SC2148
 
-if [[ "$(basename -- "$0")" = *bash ]]; then
-    . "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)/shared.sh"
+if [ -n "${BASH_VERSION:-}" ]; then
+    _dev_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+elif [ -n "${ZSH_VERSION:-}" ]; then
+    _dev_dir="${0:a:h}"
 else
-    . "${0:a:h}/shared.sh"
+    echo "dev.sh only supports bash and zsh" >&2
+    return 1 2>/dev/null || exit 1
 fi
+
+. "${_dev_dir}/shared.sh"
+unset _dev_dir
 
 setup_environment
 
