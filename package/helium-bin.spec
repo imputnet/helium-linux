@@ -88,7 +88,7 @@ ln -sf %{helium_base}/helium-wrapper \
 /usr/bin/update-desktop-database > /dev/null 2>&1 || :
 /bin/touch --no-create %{_datadir}/icons/hicolor > /dev/null 2>&1 || :
 
-if [ -d /etc/apparmor.d ]; then
+if command -v apparmor_parser > /dev/null 2>&1 && [ -d /etc/apparmor.d ]; then
     cp %{helium_base}/apparmor.cfg /etc/apparmor.d/helium-bin
     apparmor_parser -r -W -T /etc/apparmor.d/helium-bin || :
 fi
@@ -102,7 +102,9 @@ case "$1" in
         /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor > /dev/null 2>&1 || :
 
         if [ -f /etc/apparmor.d/helium-bin ]; then
-            apparmor_parser -R helium-bin || :
+            if command -v apparmor_parser > /dev/null 2>&1; then
+                apparmor_parser -R helium-bin || :
+            fi
             rm -f /etc/apparmor.d/helium-bin
         fi
         ;;
