@@ -103,7 +103,7 @@ case "$1" in
 
         if [ -f /etc/apparmor.d/helium-bin ]; then
             if command -v apparmor_parser > /dev/null 2>&1; then
-                apparmor_parser -R helium-bin || :
+                apparmor_parser -R /etc/apparmor.d/helium-bin || :
             fi
             rm -f /etc/apparmor.d/helium-bin
         fi
