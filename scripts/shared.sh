@@ -2,11 +2,18 @@
 
 # shared build functions used by local and CI scripts
 
+if [ -n "${BASH_VERSION:-}" ]; then
+    __helium_shared_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+elif [ -n "${ZSH_VERSION:-}" ]; then
+    __helium_shared_dir="${0:a:h}"
+else
+    echo "shared.sh only supports bash and zsh" >&2
+    return 1 2>/dev/null || exit 1
+fi
+
 # resolve repo root directory regardless of caller location
 repo_root() {
-    local _base_dir
-    _base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-    cd "${_base_dir}/.." >/dev/null 2>&1 && pwd
+    cd "${__helium_shared_dir}/.." >/dev/null 2>&1 && pwd
 }
 
 setup_arch() {

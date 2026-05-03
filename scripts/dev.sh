@@ -1,10 +1,16 @@
 # shellcheck disable=SC2148
 
-if [[ "$(basename -- "$0")" = *bash ]]; then
-    . "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)/shared.sh"
+if [ -n "${BASH_VERSION:-}" ]; then
+    _dev_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+elif [ -n "${ZSH_VERSION:-}" ]; then
+    _dev_dir="${0:a:h}"
 else
-    . "${0:a:h}/shared.sh"
+    echo "dev.sh only supports bash and zsh" >&2
+    return 1 2>/dev/null || exit 1
 fi
+
+. "${_dev_dir}/shared.sh"
+unset _dev_dir
 
 setup_environment
 
@@ -168,22 +174,22 @@ __helium_menu() {
         reset) ___helium_reset;;
         translate) helium_apply_translations;;
         *)
-            echo "usage: he (setup | build | run | sub | unsub | namesub | nameunsub | merge | unmerge | push | pop | pull | reset | translate)" >&2
-            echo "\tsetup - sets up the dev environment for the first itme" >&2
-            echo "\tbuild - prepares a development build binary" >&2
-            echo "\trun - runs a development build of helium with dev data dir & ui devtools enabled" >&2
-            echo "\tsub - apply google domain and name substitutions" >&2
-            echo "\tunsub - undo google domain substitutions" >&2
-            echo "\tnamesub - apply only name substitutions" >&2
-            echo "\tnameunsub - undo name substitutions" >&2
-            echo "\tmerge - merges all patches" >&2
-            echo "\tunmerge - unmerges all patches" >&2
-            echo "\tpush - applies all patches" >&2
-            echo "\tpop - undoes all patches" >&2
-            echo "\tresources - copies helium resources (such as icons)" >&2
-            echo "\tpull - undoes all patches, pulls, redoes all patches" >&2
-            echo "\treset - nukes everything" >&2
-            echo "\ttranslate - apply translations from i18n folder" >&2
+            printf 'usage: he (setup | build | run | sub | unsub | namesub | nameunsub | merge | unmerge | push | pop | pull | reset | translate)\n' >&2
+            printf '\tsetup - sets up the dev environment for the first time\n' >&2
+            printf '\tbuild - prepares a development build binary\n' >&2
+            printf '\trun - runs a development build of helium with dev data dir & ui devtools enabled\n' >&2
+            printf '\tsub - apply google domain and name substitutions\n' >&2
+            printf '\tunsub - undo google domain substitutions\n' >&2
+            printf '\tnamesub - apply only name substitutions\n' >&2
+            printf '\tnameunsub - undo name substitutions\n' >&2
+            printf '\tmerge - merges all patches\n' >&2
+            printf '\tunmerge - unmerges all patches\n' >&2
+            printf '\tpush - applies all patches\n' >&2
+            printf '\tpop - undoes all patches\n' >&2
+            printf '\tresources - copies helium resources (such as icons)\n' >&2
+            printf '\tpull - undoes all patches, pulls, redoes all patches\n' >&2
+            printf '\treset - nukes everything\n' >&2
+            printf '\ttranslate - apply translations from i18n folder\n' >&2
     esac
 }
 

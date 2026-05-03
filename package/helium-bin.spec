@@ -85,29 +85,33 @@ ln -sf %{helium_base}/helium-wrapper \
 
 %post
 # Refresh icon cache and update desktop database
-/usr/bin/update-desktop-database &> /dev/null || :
-/bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
+/usr/bin/update-desktop-database > /dev/null 2>&1 || :
+/bin/touch --no-create %{_datadir}/icons/hicolor > /dev/null 2>&1 || :
 
-if [ -d /etc/apparmor.d ]; then
+if command -v apparmor_parser > /dev/null 2>&1 && [ -d /etc/apparmor.d ]; then
     cp %{helium_base}/apparmor.cfg /etc/apparmor.d/helium-bin
-    apparmor_parser -r /etc/apparmor.d/helium-bin || :
+    apparmor_parser -r -W -T /etc/apparmor.d/helium-bin || :
 fi
 
 %postun
 # Refresh icon cache and update desktop database
-/usr/bin/update-desktop-database &> /dev/null || :
-if [ $1 -eq 0 ] ; then
-    /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null
-    /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+/usr/bin/update-desktop-database > /dev/null 2>&1 || :
+case "$1" in
+    0|remove|purge)
+        /bin/touch --no-create %{_datadir}/icons/hicolor > /dev/null 2>&1
+        /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor > /dev/null 2>&1 || :
 
-    if [ -f /etc/apparmor.d/helium-bin ]; then
-        apparmor_parser -R helium-bin || :
-        rm -f /etc/apparmor.d/helium-bin
-    fi
-fi
+        if [ -f /etc/apparmor.d/helium-bin ]; then
+            if command -v apparmor_parser > /dev/null 2>&1; then
+                apparmor_parser -R /etc/apparmor.d/helium-bin || :
+            fi
+            rm -f /etc/apparmor.d/helium-bin
+        fi
+        ;;
+esac
 
 %posttrans
-/usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+/usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor > /dev/null 2>&1 || :
 
 %changelog
 %if "%{_vendor}" != "debbuild"
