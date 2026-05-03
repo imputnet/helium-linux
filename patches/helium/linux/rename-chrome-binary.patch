@@ -41,7 +41,7 @@
    }
  
    executable("chrome_initial") {
-@@ -1704,19 +1704,19 @@ if (is_linux || is_chromeos) {
+@@ -1688,19 +1688,19 @@ if (is_linux || is_chromeos) {
        }
      }
      extract_symbols("chrome_symbols") {
@@ -80,7 +80,7 @@
  ]
  
  packaging_files_shlibs = []
-@@ -172,12 +170,12 @@ action("merge_rpm_dependencies") {
+@@ -170,12 +168,12 @@ action("merge_rpm_dependencies") {
  }
  
  strip_binary("strip_chrome_binary") {

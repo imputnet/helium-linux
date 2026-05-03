@@ -1,7 +1,7 @@
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -1820,7 +1820,7 @@ if (is_linux || is_chromeos) {
-     ]
+@@ -1800,7 +1800,7 @@ if (is_linux || is_chromeos) {
+     sources = [ "//chrome/tools/build/linux/chrome-wrapper" ]
      if (is_linux) {
        sources += [
 -        "//chrome/app/theme/$branding_path_component/linux/product_logo_48.png",
@@ -134,7 +134,7 @@
  #if defined(DLOPEN_PULSEAUDIO)
 --- a/chrome/browser/shell_integration_linux.cc
 +++ b/chrome/browser/shell_integration_linux.cc
-@@ -513,11 +513,7 @@ std::string GetProgramClassClass() {
+@@ -458,11 +458,7 @@ std::string GetProgramClassClass() {
  }
  
  std::string GetIconName() {
