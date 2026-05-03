@@ -1,3 +1,5 @@
+diff --git a/google_apis/api_key_cache.cc b/google_apis/api_key_cache.cc
+index bbb9420f40..690445534b 100644
 --- a/google_apis/api_key_cache.cc
 +++ b/google_apis/api_key_cache.cc
 @@ -237,14 +237,14 @@ ApiKeyCache::ApiKeyCache(const DefaultAp

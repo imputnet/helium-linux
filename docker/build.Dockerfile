@@ -2,7 +2,7 @@ FROM debian:trixie-slim
 
 ARG UID=1000
 ARG GID=$UID
-ARG NODE_VERSION="22"
+ARG NODE_VERSION="24"
 
 # set deb to non-interactive mode and upgrade packages
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && export DEBIAN_FRONTEND=noninteractive
@@ -43,6 +43,11 @@ RUN tar --strip-components=1 -xvzf /tmp/sccache.tar.gz \
 
 # create builder user
 RUN groupadd -g ${GID} builder && useradd -d /home/builder -g ${GID} -u ${UID} -m builder
+
+# create config for gsclient depot tools that is needed when building locally
+COPY --chmod=777 --chown=builder:builder metrics.cfg /home/builder/.config/depot_tools/
+# create config for gsclient depot tools that is needed when running in CI
+COPY --chmod=777 --chown=builder:builder metrics.cfg /.config/depot_tools/
 
 USER builder
 WORKDIR /repo
