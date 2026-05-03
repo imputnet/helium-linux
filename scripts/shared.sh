@@ -105,6 +105,14 @@ fetch_sources() {
     "${_main_repo}/utils/downloads.py" retrieve -i "${_main_repo}/deps.ini" -c "${_dl_cache}"
     "${_main_repo}/utils/downloads.py" unpack -i "${_main_repo}/deps.ini" -c "${_dl_cache}" "${_src_dir}"
 
+    # workaround for "files could not be pruned" when building
+    # from a git clone:
+    # https://github.com/imputnet/helium-linux/actions/runs/25290666180/job/74141891707
+    mkdir -p "$_src_dir/third_party/gperf/cipd/bin"
+    mkdir -p "$_src_dir/third_party/gperf/cipd/share/info"
+    echo > "$_src_dir/third_party/gperf/cipd/bin/gperf"
+    echo > "$_src_dir/third_party/gperf/cipd/share/info/gperf.info"
+
     touch "${stamp}"
 }
 
