@@ -5,7 +5,6 @@ ungoogled-chromium/portablelinux/fix-compiling-on-arm64.patch
 helium/linux/change-chromium-branding.patch
 helium/linux/rename-chrome-binary.patch
 helium/linux/use-default-theme.patch
-helium/linux/fix-swipe-between-pages.patch
 helium/linux/add-middle-click-paste-flag.patch
 helium/linux/add-error-for-missing-desktop-file.patch
 helium/linux/disable-tab-strokes.patch

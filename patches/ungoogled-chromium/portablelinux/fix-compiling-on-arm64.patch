@@ -16,7 +16,7 @@
    cxx = "g++"
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
-@@ -518,6 +518,21 @@ def DownloadPinnedClang():
+@@ -522,6 +522,21 @@ def DownloadPinnedClang():
                             PINNED_CLANG_VERSION)
  
  
@@ -131,9 +131,9 @@
 +rustflags = ["-Clink-arg=--sysroot=$DEBIAN_SYSROOT"]
 --- a/tools/rust/config.toml.template
 +++ b/tools/rust/config.toml.template
-@@ -90,3 +90,12 @@ cc = "$LLVM_BIN/clang"
- cxx = "$LLVM_BIN/clang++"
+@@ -93,3 +93,12 @@ cxx = "$LLVM_BIN/clang++"
  linker = "$LLVM_BIN/clang"
+ jemalloc = true
  
 +[target.aarch64-unknown-linux-gnu]
 +llvm-config = "$LLVM_BIN/llvm-config"
