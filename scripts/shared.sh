@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # shared build functions used by local and CI scripts
 
 if [ -n "${BASH_VERSION:-}" ]; then
