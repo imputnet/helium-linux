@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euxo pipefail
 
 PLATFORM_DIR="$PWD"
