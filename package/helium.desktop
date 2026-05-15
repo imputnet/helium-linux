@@ -113,7 +113,6 @@ Comment[zh_TW]=連線到網際網路
 
 Exec=helium %U
 StartupNotify=true
-StartupWMClass=helium
 Terminal=false
 Icon=helium
 Type=Application
