@@ -84,7 +84,7 @@
            profile,
 --- a/chrome/browser/ui/webui/settings/settings_default_browser_handler.cc
 +++ b/chrome/browser/ui/webui/settings/settings_default_browser_handler.cc
-@@ -200,7 +200,11 @@ void DefaultBrowserHandler::OnDefaultChe
+@@ -196,7 +196,11 @@ void DefaultBrowserHandler::OnDefaultChe
    base::DictValue dict;
    dict.Set("isDefault", state == shell_integration::IS_DEFAULT);
    dict.Set("canPin", can_pin);
@@ -127,7 +127,7 @@
  #include "ui/display/screen.h"
  #endif
  
-@@ -733,6 +734,15 @@ void AddClearBrowsingDataStrings(content
+@@ -729,6 +730,15 @@ void AddClearBrowsingDataStrings(content
    html_source->AddLocalizedStrings(kLocalizedStrings);
  }
  
@@ -143,7 +143,7 @@
  #if !BUILDFLAG(IS_CHROMEOS)
  void AddDefaultBrowserStrings(content::WebUIDataSource* html_source) {
    static constexpr webui::LocalizedString kLocalizedStrings[] = {
-@@ -751,9 +761,15 @@ void AddDefaultBrowserStrings(content::W
+@@ -747,9 +757,15 @@ void AddDefaultBrowserStrings(content::W
        {"defaultBrowserMakeDefaultButton",
         IDS_SETTINGS_DEFAULT_BROWSER_MAKE_DEFAULT_BUTTON},
        {"defaultBrowserError", IDS_SETTINGS_DEFAULT_BROWSER_ERROR},

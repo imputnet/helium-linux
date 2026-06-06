@@ -41,7 +41,7 @@
    }
  
    executable("chrome_initial") {
-@@ -1688,19 +1688,19 @@ if (is_linux || is_chromeos) {
+@@ -1697,19 +1697,19 @@ if (is_linux || is_chromeos) {
        }
      }
      extract_symbols("chrome_symbols") {
@@ -67,8 +67,8 @@
          # GYP used "ia32" so keep that naming for back-compat.
 --- a/chrome/installer/linux/BUILD.gn
 +++ b/chrome/installer/linux/BUILD.gn
-@@ -32,10 +32,8 @@ declare_args() {
- assert(is_linux)
+@@ -60,10 +60,8 @@ if (current_cpu == "x86") {
+ }
  
  packaging_files_executables = [
 -  "$root_out_dir/chrome",
@@ -80,7 +80,7 @@
  ]
  
  packaging_files_shlibs = []
-@@ -170,12 +168,12 @@ action("merge_rpm_dependencies") {
+@@ -198,12 +196,12 @@ action("merge_rpm_dependencies") {
  }
  
  strip_binary("strip_chrome_binary") {
