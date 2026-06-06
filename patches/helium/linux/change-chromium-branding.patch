@@ -1,6 +1,6 @@
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -1800,7 +1800,7 @@ if (is_linux || is_chromeos) {
+@@ -1809,7 +1809,7 @@ if (is_linux || is_chromeos) {
      sources = [ "//chrome/tools/build/linux/chrome-wrapper" ]
      if (is_linux) {
        sources += [
