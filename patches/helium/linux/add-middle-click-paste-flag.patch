@@ -1,20 +1,20 @@
 --- a/chrome/browser/helium_flag_choices.h
 +++ b/chrome/browser/helium_flag_choices.h
-@@ -38,6 +38,8 @@ namespace helium {
+@@ -40,6 +40,8 @@ namespace helium {
+   constexpr const char kMiddleClickAutoscrollCommandLine[] = "middle-click-autoscroll";
    constexpr const char kHeliumCompactLocationWidthCommandLine[] =
        "helium-compact-location-width";
-   constexpr const char kHeliumZenModeCommandLine[] = "helium-zen-mode";
 +  constexpr const char kMiddleClickPasteEnabledCommandLine[] =
 +      "helium-middle-click-paste-enabled";
+ 
  }  // namespace helium
  
- #endif  /* CHROME_BROWSER_HELIUM_FLAG_CHOICES_H_ */
 --- a/chrome/browser/helium_flag_entries.h
 +++ b/chrome/browser/helium_flag_entries.h
-@@ -46,4 +46,8 @@
-      "Hides browser chrome (toolbar, tab strip, bookmarks bar) and reveals it "
-      "on hover near the window edges. Helium flag.",
-      kOsDesktop, FEATURE_VALUE_TYPE(features::kHeliumZenMode)},
+@@ -44,4 +44,8 @@
+      "Automatic address bar width in compact layout",
+      "Allows the location bar to automatically reduce its width in the compact browser layout. The omnibox may be uncomfortable to use. Helium flag.",
+      kOsDesktop, FEATURE_VALUE_TYPE(features::kHeliumCompactLocationWidth)},
 +    {helium::kMiddleClickPasteEnabledCommandLine,
 +     "Middle Click Paste",
 +     "Controls middle click paste functionality. Helium flag.",
@@ -70,18 +70,18 @@
    }
 --- a/ui/base/ui_base_features.cc
 +++ b/ui/base/ui_base_features.cc
-@@ -463,4 +463,6 @@ BASE_FEATURE_PARAM(int,
- 
- BASE_FEATURE(kSplitViewLinkOpen, base::FEATURE_DISABLED_BY_DEFAULT);
+@@ -485,4 +485,6 @@ bool IsGlassFrameEnabled() {
+ #endif
+ }
  
 +BASE_FEATURE(kMiddleClickPasteEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
 +
  }  // namespace features
 --- a/ui/base/ui_base_features.h
 +++ b/ui/base/ui_base_features.h
-@@ -304,6 +304,9 @@ BASE_DECLARE_FEATURE_PARAM(int, kCompens
+@@ -326,6 +326,9 @@ BASE_DECLARE_FEATURE(kGlassFrame);
  COMPONENT_EXPORT(UI_BASE_FEATURES)
- BASE_DECLARE_FEATURE(kSplitViewLinkOpen);
+ bool IsGlassFrameEnabled();
  
 +COMPONENT_EXPORT(UI_BASE_FEATURES)
 +BASE_DECLARE_FEATURE(kMiddleClickPasteEnabled);
