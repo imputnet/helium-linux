@@ -89,7 +89,7 @@
  
      if os.path.exists(ssl_dir):
          RmTree(ssl_dir)
-@@ -567,7 +567,7 @@ def RustTargetTriple():
+@@ -571,7 +571,7 @@ def RustTargetTriple():
      elif sys.platform == 'win32':
          return 'x86_64-pc-windows-msvc'
      else:
@@ -98,7 +98,7 @@
  
  
  # Build the LLVM libraries and install them .
-@@ -577,6 +577,9 @@ def BuildLLVMLibraries(skip_checkout, ll
+@@ -581,6 +581,9 @@ def BuildLLVMLibraries(skip_checkout, ll
          sys.executable,
          os.path.join(CLANG_SCRIPTS_DIR, 'build.py'),
          '--disable-asserts',
@@ -108,7 +108,7 @@
          '--no-tools',
          '--no-runtimes',
          # PIC needed for Rust build (links LLVM into shared object)
-@@ -775,7 +778,8 @@ def main():
+@@ -779,7 +782,8 @@ def main():
          # Fetch sysroot we build rustc against. This ensures a minimum supported
          # host (not Chromium target). Since the rustc linux package is for
          # x86_64 only, that is the sole needed sysroot.

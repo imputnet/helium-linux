@@ -32,7 +32,7 @@
         i != current_browser.processes.end(); ++i) {
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -151,7 +151,7 @@ if (!is_android && !is_mac) {
+@@ -150,7 +150,7 @@ if (!is_android && !is_mac) {
    if (is_win) {
      _chrome_output_name = "initialexe/chrome"
    } else {
@@ -41,7 +41,7 @@
    }
  
    executable("chrome_initial") {
-@@ -1697,19 +1697,19 @@ if (is_linux || is_chromeos) {
+@@ -1712,19 +1712,19 @@ if (is_linux || is_chromeos) {
        }
      }
      extract_symbols("chrome_symbols") {
