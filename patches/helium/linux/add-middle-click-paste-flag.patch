@@ -30,7 +30,7 @@
  #include "base/logging.h"
  #include "base/strings/string_number_conversions.h"
  #include "base/strings/string_util.h"
-@@ -143,6 +144,12 @@ void UpdateFromSystemSettings(blink::Ren
+@@ -141,6 +142,12 @@ void UpdateFromSystemSettings(blink::Ren
  #endif  // BUILDFLAG(USE_AURA)
  
  #if BUILDFLAG(IS_LINUX)
@@ -70,8 +70,8 @@
    }
 --- a/ui/base/ui_base_features.cc
 +++ b/ui/base/ui_base_features.cc
-@@ -485,4 +485,6 @@ bool IsGlassFrameEnabled() {
- #endif
+@@ -516,4 +516,6 @@ bool IsRoundedIconsEnabled() {
+          base::FeatureList::IsEnabled(kRoundedIcons);
  }
  
 +BASE_FEATURE(kMiddleClickPasteEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
@@ -79,9 +79,9 @@
  }  // namespace features
 --- a/ui/base/ui_base_features.h
 +++ b/ui/base/ui_base_features.h
-@@ -326,6 +326,9 @@ BASE_DECLARE_FEATURE(kGlassFrame);
+@@ -341,6 +341,9 @@ bool IsGlassFrameEnabled();
  COMPONENT_EXPORT(UI_BASE_FEATURES)
- bool IsGlassFrameEnabled();
+ bool IsRoundedIconsEnabled();
  
 +COMPONENT_EXPORT(UI_BASE_FEATURES)
 +BASE_DECLARE_FEATURE(kMiddleClickPasteEnabled);

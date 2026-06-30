@@ -1,6 +1,6 @@
 --- a/google_apis/api_key_cache.cc
 +++ b/google_apis/api_key_cache.cc
-@@ -248,14 +248,14 @@ ApiKeyCache::ApiKeyCache(const DefaultAp
+@@ -255,14 +255,14 @@ ApiKeyCache::ApiKeyCache(const DefaultAp
  
    std::string default_client_id = CalculateKeyValue(
        default_api_keys.google_default_client_id,
