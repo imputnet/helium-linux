@@ -1,5 +1,5 @@
 is_official_build=true
-symbol_level=0
+symbol_level=1
 disable_fieldtrial_testing_config=true
 blink_enable_generated_code_formatting=false
 blink_symbol_level=0
