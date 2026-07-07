@@ -8,7 +8,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt -y update && apt -y upgrade
 
 ## Install system dependencies
-RUN apt -y install binutils elfutils desktop-file-utils dpkg dpkg-dev fakeroot file git imagemagick wget xz-utils pv curl jq python3 zsync gnupg perl make liblocale-gettext-perl
+RUN apt -y install binutils elfutils desktop-file-utils dpkg dpkg-dev fakeroot file git imagemagick wget xz-utils pv curl jq python3 zip zsync gnupg perl make liblocale-gettext-perl
 
 ## Install Chromium runtime libraries for debbuild resolution
 RUN apt -y install --no-install-recommends \

@@ -64,6 +64,13 @@ cp "$_root_dir/package/helium-wrapper.sh" "$_tarball_dir/helium-wrapper"
 wait
 (cd "$_tarball_dir" && ln -sf helium chrome)
 
+_syms_zip="$_release_dir/${_release_name}_symbols.zip"
+rm -f "$_syms_zip"
+find "$_tarball_dir" -type f -exec file {} + \
+    | awk -F: '/ELF/ {print $1}' \
+    | sed "s|^$_tarball_dir/||" \
+    | (cd "$_build_dir/src/out/Default" && zip -q "$_syms_zip" -@)
+
 if command -v eu-strip >/dev/null 2>&1; then
     _strip_cmd=eu-strip
 else
