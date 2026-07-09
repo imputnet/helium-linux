@@ -61,6 +61,14 @@ runs:
         if-no-files-found: error
         compression-level: 0
 
+    - name: Upload symbols artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: helium-${{ steps.version.outputs.version }}-${{ env.ARCH }}-symbols
+        path: build/release/helium-${{ steps.version.outputs.version }}-${{ env.ARCH }}_symbols.zip
+        if-no-files-found: error
+        compression-level: 0
+
     - name: Upload .deb artifact
       uses: actions/upload-artifact@v4
       with:
