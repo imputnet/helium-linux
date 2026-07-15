@@ -10,7 +10,7 @@
      deps = [
 --- a/components/crash/core/app/crashpad_linux.cc
 +++ b/components/crash/core/app/crashpad_linux.cc
-@@ -169,7 +169,7 @@ bool PlatformCrashpadInitialization(
+@@ -173,7 +173,7 @@ bool PlatformCrashpadInitialization(
      if (!base::PathService::Get(base::DIR_EXE, &handler_path)) {
        return false;
      }
