@@ -1,6 +1,6 @@
 --- a/chrome/browser/ui/views/frame/browser_view.cc
 +++ b/chrome/browser/ui/views/frame/browser_view.cc
-@@ -1417,9 +1417,9 @@ bool BrowserView::GetTabStripVisible() c
+@@ -1451,9 +1451,9 @@ bool BrowserView::GetTabStripVisible() c
  }
  
  bool BrowserView::ShouldDrawTabStrokes() const {
@@ -10,5 +10,5 @@
 -#else   // BUILDFLAG(IS_CHROMEOS)
 +#else   // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
  
-   if (browser()->app_controller() &&
-       !browser()->app_controller()->has_tab_strip()) {
+   if (web_app::AppBrowserController::From(browser()) &&
+       !web_app::AppBrowserController::From(browser())->has_tab_strip()) {
