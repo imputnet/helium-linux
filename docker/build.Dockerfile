@@ -44,5 +44,8 @@ RUN tar --strip-components=1 -xvzf /tmp/sccache.tar.gz \
 # create builder user
 RUN groupadd -g ${GID} builder && useradd -d /home/builder -g ${GID} -u ${UID} -m builder
 
+ENV GOPATH=/tmp/go
+ENV GOCACHE=/tmp/go-build-cache
+
 USER builder
 WORKDIR /repo
