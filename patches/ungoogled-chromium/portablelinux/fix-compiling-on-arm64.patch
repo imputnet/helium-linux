@@ -16,7 +16,7 @@
    cxx = "g++"
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
-@@ -537,6 +537,21 @@ def DownloadPinnedClang():
+@@ -551,6 +551,21 @@ def DownloadPinnedClang():
                             PINNED_CLANG_VERSION)
  
  
@@ -76,9 +76,9 @@
 -                   DownloadDebianSysroot, GetLibXml2Dirs, GitCherryPick,
 +                   DownloadDebianSysroot, GetLibXml2Dirs, GetHostSysrootPlatform,
                     GitRevert, LLVM_DIR, IsGitAncestorToHead,
-                    LLVM_BUILD_TOOLS_DIR, RunCommand)
- from update import (CHROMIUM_DIR, DownloadAndUnpack, EnsureDirExists,
-@@ -190,8 +190,8 @@ def AddOpenSSLToEnv():
+                    LLVM_BUILD_TOOLS_DIR, RunCommand,
+                    DEFAULT_MACOSX_DEPLOYMENT_TARGET, GetLatestCommit)
+@@ -194,8 +194,8 @@ def AddOpenSSLToEnv():
          ssl_url = (f'{CIPD_DOWNLOAD_URL}/{OPENSSL_CIPD_WIN_AMD_PATH}'
                     f'/+/version:2@{OPENSSL_CIPD_WIN_AMD_VERSION}')
      else:
@@ -89,7 +89,7 @@
  
      if os.path.exists(ssl_dir):
          RmTree(ssl_dir)
-@@ -571,7 +571,7 @@ def RustTargetTriple():
+@@ -575,7 +575,7 @@ def RustTargetTriple():
      elif sys.platform == 'win32':
          return 'x86_64-pc-windows-msvc'
      else:
@@ -98,7 +98,7 @@
  
  
  # Build the LLVM libraries and install them .
-@@ -581,6 +581,9 @@ def BuildLLVMLibraries(skip_checkout, ll
+@@ -585,6 +585,9 @@ def BuildLLVMLibraries(skip_checkout, ll
          sys.executable,
          os.path.join(CLANG_SCRIPTS_DIR, 'build.py'),
          '--disable-asserts',
@@ -108,7 +108,7 @@
          '--no-tools',
          '--no-runtimes',
          # PIC needed for Rust build (links LLVM into shared object)
-@@ -779,7 +782,8 @@ def main():
+@@ -783,7 +786,8 @@ def main():
          # Fetch sysroot we build rustc against. This ensures a minimum supported
          # host (not Chromium target). Since the rustc linux package is for
          # x86_64 only, that is the sole needed sysroot.
