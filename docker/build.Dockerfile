@@ -27,7 +27,7 @@ RUN apt-get -y install bison debhelper desktop-file-utils flex gperf gsettings-d
   libpci-dev libpipewire-0.3-dev libpng-dev libpulse-dev libre2-dev libsnappy-dev libspeechd-dev libudev-dev libusb-1.0-0-dev \
   libva-dev libvpx-dev libwebp-dev libx11-xcb-dev libxcb-dri3-dev libxshmfence-dev libxslt1-dev libxss-dev libxt-dev libxtst-dev\
   mesa-common-dev ninja-build pkg-config python3-jinja2 python3-setuptools python3-xcbgen python-is-python3 qtbase5-dev \
-  uuid-dev valgrind wdiff x11-apps xcb-proto xfonts-base xvfb xz-utils yasm
+  uuid-dev valgrind wdiff x11-apps xcb-proto xfonts-base xvfb xz-utils yasm golang-go mold
 
 # install additional packages needed when cloning the chromium repo (and sudo and vim for convenience)
 RUN apt-get -y install git python3-httplib2 python3-pyparsing python3-six python3-pillow python3-requests rsync sudo vim
