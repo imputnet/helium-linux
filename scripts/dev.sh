@@ -113,7 +113,7 @@ ___helium_substitution() {
 }
 
 ___helium_build() {
-    cd "$_src_dir" && ninja -C out/Default chrome chromedriver
+    build -k 0
 }
 
 ___helium_run() {

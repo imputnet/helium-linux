@@ -212,6 +212,14 @@ setup_toolchain() {
     ln -sf "$(which mold)" "${_src_dir}/buildtools/third_party/mold/cipd/mold"
     mkdir -p "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin"
     ln -sf "$(which go)" "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin/go"
+
+    local siso_version
+    siso_version="$("${_src_dir}/third_party/depot_tools/gclient.py" getdep \
+        --var=siso_version --deps-file="${_src_dir}/DEPS")"
+    mkdir -p "${_src_dir}/third_party/siso/cipd"
+    printf '%s %s\n' 'build/siso/${platform}' "${siso_version}" | \
+        "${_src_dir}/third_party/depot_tools/cipd" ensure \
+            -ensure-file - -root "${_src_dir}/third_party/siso/cipd"
 }
 
 gn_gen() {
@@ -225,5 +233,7 @@ gn_gen() {
 
 build() {
     cd "${_src_dir}"
-    ninja -C out/Default chrome chromedriver
+    local siso="${_src_dir}/third_party/siso/cipd/siso"
+    local autoninja="${_src_dir}/third_party/depot_tools/autoninja.py"
+    SISO_PATH="$siso" "$autoninja" -C "$_out_dir" chrome chromedriver "$@"
 }
