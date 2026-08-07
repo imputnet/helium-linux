@@ -127,7 +127,7 @@
  #include "ui/display/screen.h"
  #endif
  
-@@ -805,6 +806,15 @@ void AddClearBrowsingDataStrings(content
+@@ -807,6 +808,15 @@ void AddClearBrowsingDataStrings(content
    html_source->AddLocalizedStrings(kLocalizedStrings);
  }
  
@@ -143,7 +143,7 @@
  #if !BUILDFLAG(IS_CHROMEOS)
  void AddDefaultBrowserStrings(content::WebUIDataSource* html_source) {
    static constexpr webui::LocalizedString kLocalizedStrings[] = {
-@@ -823,9 +833,15 @@ void AddDefaultBrowserStrings(content::W
+@@ -825,9 +835,15 @@ void AddDefaultBrowserStrings(content::W
        {"defaultBrowserMakeDefaultButton",
         IDS_SETTINGS_DEFAULT_BROWSER_MAKE_DEFAULT_BUTTON},
        {"defaultBrowserError", IDS_SETTINGS_DEFAULT_BROWSER_ERROR},
