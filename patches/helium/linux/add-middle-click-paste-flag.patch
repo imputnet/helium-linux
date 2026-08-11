@@ -1,6 +1,6 @@
 --- a/chrome/browser/helium_flag_choices.h
 +++ b/chrome/browser/helium_flag_choices.h
-@@ -42,6 +42,8 @@ namespace helium {
+@@ -44,6 +44,8 @@ namespace helium {
        "helium-compact-location-width";
    constexpr const char kHeliumNativeFrameMaterialsCommandLine[] =
        "helium-native-frame-materials";
@@ -11,7 +11,7 @@
  
 --- a/chrome/browser/helium_flag_entries.h
 +++ b/chrome/browser/helium_flag_entries.h
-@@ -47,4 +47,8 @@
+@@ -55,4 +55,8 @@
       "Native frame materials",
       "Enables an option to apply native materials to the browser frame surfaces. May cause UI clarity issues. Helium flag.",
       kOsMac, FEATURE_VALUE_TYPE(features::kHeliumNativeFrameMaterials)},
