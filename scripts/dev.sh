@@ -129,7 +129,7 @@ ___helium_pull() {
     fi
 
     cd "$_src_dir" && quilt pop -a || true
-    "$_root_dir/devutils/update_patches.sh" unmerge || true
+    ___helium_patches_op unmerge || true
 
     for dir in "$_root_dir" "$_main_repo"; do
         git -C "$dir" stash \
@@ -139,7 +139,7 @@ ___helium_pull() {
         || true
     done
 
-    "$_root_dir/devutils/update_patches.sh" merge
+    ___helium_patches_op merge
     cd "$_src_dir" && quilt push -a --refresh
 }
 
