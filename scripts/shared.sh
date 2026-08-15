@@ -236,6 +236,13 @@ setup_toolchain() {
     printf '%s %s\n' 'build/siso/${platform}' "${siso_version}" | \
         "${_src_dir}/third_party/depot_tools/cipd" ensure \
             -ensure-file - -root "${_src_dir}/third_party/siso/cipd"
+
+    # clone.py skips gclient hooks, including the hook that creates this file.
+    local siso_config_dir="${_src_dir}/build/config/siso"
+    if [ ! -f "${siso_config_dir}/backend_config/backend.star" ]; then
+        cp "${siso_config_dir}/backend_config/google.star" \
+            "${siso_config_dir}/backend_config/backend.star"
+    fi
 }
 
 gn_gen() {
