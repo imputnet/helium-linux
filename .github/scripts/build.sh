@@ -28,8 +28,13 @@ else
     _task_timeout=18000
     cd "$_src_dir"
 
+    configure_remoteexec
+    export SISO_PATH="${_src_dir}/third_party/siso/cipd/siso"
+
     set +e
-    timeout -k 5m -s INT "${_task_timeout}"s ninja -C out/Default chrome chromedriver
+    timeout -k 5m -s INT "${_task_timeout}"s \
+        "${_src_dir}/third_party/depot_tools/autoninja.py" \
+        -C out/Default chrome chromedriver
     rc=$?
     set -e
 
