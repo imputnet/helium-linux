@@ -37,6 +37,8 @@ _extra_env=()
 [ -n "${_runner_environment:-}" ] && _extra_env+=(-e _runner_environment)
 [ -n "${GITHUB_OUTPUT:-}" ] && _extra_env+=(-e GITHUB_OUTPUT)
 [ -n "${ARCH:-}" ] && _extra_env+=(-e ARCH)
+[ -n "${SISO_REAPI_ADDRESS:-}" ] && _extra_env+=(-e SISO_REAPI_ADDRESS)
+[ -n "${SISO_REAPI_INSTANCE:-}" ] && _extra_env+=(-e SISO_REAPI_INSTANCE)
 
 for sccache_env_name in $(env | grep ^SCCACHE_ | cut -d= -f1); do
     _extra_env+=(-e "$sccache_env_name")
