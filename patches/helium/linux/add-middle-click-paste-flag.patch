@@ -1,25 +1,25 @@
 --- a/chrome/browser/helium_flag_choices.h
 +++ b/chrome/browser/helium_flag_choices.h
-@@ -44,6 +44,8 @@ namespace helium {
-       "helium-compact-location-width";
-   constexpr const char kHeliumNativeFrameMaterialsCommandLine[] =
-       "helium-native-frame-materials";
-+  constexpr const char kMiddleClickPasteEnabledCommandLine[] =
-+      "helium-middle-click-paste-enabled";
+@@ -47,6 +47,9 @@ constexpr const char kHeliumCompactLocat
  
+ constexpr const char kHeliumNativeFrameMaterialsCommandLine[] =
+     "helium-native-frame-materials";
++
++constexpr const char kMiddleClickPasteEnabledCommandLine[] =
++    "helium-middle-click-paste-enabled";
  }  // namespace helium
  
+ #endif /* CHROME_BROWSER_HELIUM_FLAG_CHOICES_H_ */
 --- a/chrome/browser/helium_flag_entries.h
 +++ b/chrome/browser/helium_flag_entries.h
-@@ -55,4 +55,8 @@
-      "Native frame materials",
-      "Enables an option to apply native materials to the browser frame surfaces. May cause UI clarity issues. Helium flag.",
+@@ -85,4 +85,7 @@
+      "surfaces. May cause UI clarity issues. Helium flag.",
       kOsMac, FEATURE_VALUE_TYPE(features::kHeliumNativeFrameMaterials)},
-+    {helium::kMiddleClickPasteEnabledCommandLine,
-+     "Middle Click Paste",
-+     "Controls middle click paste functionality. Helium flag.",
-+     kOsLinux, FEATURE_VALUE_TYPE(features::kMiddleClickPasteEnabled)},
- #endif  /* CHROME_BROWSER_HELIUM_FLAG_ENTRIES_H_ */
+     // platform
++    {helium::kMiddleClickPasteEnabledCommandLine, "Middle Click Paste",
++     "Controls middle click paste functionality. Helium flag.", kOsLinux,
++     FEATURE_VALUE_TYPE(features::kMiddleClickPasteEnabled)},
+ #endif  // CHROME_BROWSER_HELIUM_FLAG_ENTRIES_H_
 --- a/chrome/browser/renderer_preferences_util.cc
 +++ b/chrome/browser/renderer_preferences_util.cc
 @@ -9,6 +9,7 @@
