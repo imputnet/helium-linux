@@ -46,6 +46,7 @@ RUN groupadd -g ${GID} builder && useradd -d /home/builder -g ${GID} -u ${UID} -
 
 ENV GOPATH=/tmp/go
 ENV GOCACHE=/tmp/go-build-cache
+ENV HOME=/tmp/home
 
 USER builder
 WORKDIR /repo
