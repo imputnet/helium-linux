@@ -1,0 +1,172 @@
+--- a/chrome/common/pref_names.h
++++ b/chrome/common/pref_names.h
+@@ -700,6 +700,9 @@
+ inline constexpr char kHeliumMinimalLocationBar[] =
+     "helium.browser.minimal_location_bar";
+ 
++inline constexpr char kHeliumTouchpadScrollSpeedMultiplier[] =
++    "helium.browser.touchpad_scroll_speed_multiplier";
++
+ 
+ // A boolean pref set to true if a Home button to open the Home pages should be
+ // visible on the toolbar.
+--- a/chrome/browser/ui/browser_ui_prefs.cc
++++ b/chrome/browser/ui/browser_ui_prefs.cc
+@@ -131,6 +131,8 @@
+ 
+   registry->RegisterBooleanPref(prefs::kHeliumMinimalLocationBar, false);
+ 
++  registry->RegisterDoublePref(prefs::kHeliumTouchpadScrollSpeedMultiplier, 1.0);
++
+ 
+   registry->RegisterBooleanPref(prefs::kHomePageIsNewTabPage, true,
+                                 pref_registration_flags);
+--- a/chrome/browser/extensions/api/settings_private/prefs_util.cc
++++ b/chrome/browser/extensions/api/settings_private/prefs_util.cc
+@@ -225,6 +225,9 @@
+       settings_api::PrefType::kBoolean;
+   (*s_allowlist)[::prefs::kHeliumNativeFrameMaterials] =
+       settings_api::PrefType::kBoolean;
++  (*s_allowlist)[::prefs::kHeliumTouchpadScrollSpeedMultiplier] =
++      settings_api::PrefType::kNumber;
++
+ 
+   // Miscellaneous
+   (*s_allowlist)[::embedder_support::kAlternateErrorPagesEnabled] =
+--- a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
++++ b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
+@@ -537,6 +537,8 @@
+                           Profile* profile) {
+   static constexpr webui::LocalizedString kLocalizedStrings[] = {
+       {"appearancePageTitle", IDS_SETTINGS_APPEARANCE},
++      {"touchpadScrollSpeedMultiplierLabel",
++       IDS_SETTINGS_TOUCHPAD_SCROLL_SPEED_MULTIPLIER_LABEL},
+       {"appearanceBehaviorPageTitle", IDS_SETTINGS_APPEARANCE_AND_BEHAVIOR},
+       {"behaviorPageTitle", IDS_SETTINGS_BEHAVIOR},
+       {"ctrlTabMru", IDS_SETTINGS_CTRL_TAB_MRU},
+--- a/chrome/app/settings_strings.grdp
++++ b/chrome/app/settings_strings.grdp
+@@ -200,6 +200,9 @@
+     <message name="IDS_SETTINGS_APPEARANCE" desc="Name of the settings page which displays appearance preferences.">
+       Appearance
+     </message>
++    <message name="IDS_SETTINGS_TOUCHPAD_SCROLL_SPEED_MULTIPLIER_LABEL" desc="Label for the touchpad scroll speed multiplier slider.">
++      Touchpad scroll speed
++    </message>
+     <message name="IDS_SETTINGS_APPEARANCE_AND_BEHAVIOR" desc="Name of the settings page which displays appearance and behavior preferences.">
+       Appearance and behavior
+     </message>
+--- a/chrome/browser/resources/settings/appearance_page/appearance_behavior_page.html
++++ b/chrome/browser/resources/settings/appearance_page/appearance_behavior_page.html
+@@ -31,4 +31,15 @@
+       label="$i18n{allowSplitViewDragAndDrop}">
+   </settings-toggle-button>
+ 
++  <div class="cr-row hr">
++    <div class="flex cr-padded-text" aria-hidden="true">
++      <div>$i18n{touchpadScrollSpeedMultiplierLabel}</div>
++    </div>
++    <settings-slider
++        pref="{{prefs.helium.browser.touchpad_scroll_speed_multiplier}}"
++        min="5" max="300" step="5" scale="100"
++        label-aria="$i18n{touchpadScrollSpeedMultiplierLabel}">
++    </settings-slider>
++  </div>
++
+ </settings-section>
+--- a/chrome/browser/resources/settings/appearance_page/appearance_behavior_page.ts
++++ b/chrome/browser/resources/settings/appearance_page/appearance_behavior_page.ts
+@@ -2,6 +2,7 @@
+ // You can use, redistribute, and/or modify this source code under
+ // the terms of the GPL-3.0 license that can be found in the LICENSE file.
+ 
++import '../controls/settings_slider.js';
+ import '../controls/settings_toggle_button.js';
+ import '../settings_page/settings_section.js';
+ 
+--- a/content/public/browser/content_browser_client.h
++++ b/content/public/browser/content_browser_client.h
+@@ -2306,6 +2306,10 @@
+   // convention is to put new constants under a subdict at the key "clientInfo".
+   virtual base::DictValue GetNetLogConstants();
+ 
++  virtual double GetTouchpadScrollSpeedMultiplier(
++      BrowserContext* browser_context);
++
++
+ #if BUILDFLAG(IS_ANDROID)
+   // Only used by Android WebView.
+   // Returns:
+--- a/content/public/browser/content_browser_client.cc
++++ b/content/public/browser/content_browser_client.cc
+@@ -1679,6 +1679,12 @@
+   return false;
+ }
+ 
++double ContentBrowserClient::GetTouchpadScrollSpeedMultiplier(
++    BrowserContext* browser_context) {
++  return 1.0;
++}
++
++
+ std::unique_ptr<IdentityRequestDialogController>
+ ContentBrowserClient::CreateIdentityRequestDialogController(
+     WebContents* web_contents) {
+--- a/chrome/browser/chrome_content_browser_client.h
++++ b/chrome/browser/chrome_content_browser_client.h
+@@ -421,6 +421,8 @@
+       content::RenderFrameHost* rfh,
+       const url::Origin& context_origin,
+       const url::Origin& reporting_origin) override;
++  double GetTouchpadScrollSpeedMultiplier(
++      content::BrowserContext* browser_context) override;
+   // TODO(crbug.com/369436599): Remove the default arguments in virtual methods.
+   bool IsSharedStorageAllowed(
+       content::BrowserContext* browser_context,
+--- a/chrome/browser/chrome_content_browser_client.cc
++++ b/chrome/browser/chrome_content_browser_client.cc
+@@ -3723,6 +3723,17 @@
+       context_origin, reporting_origin, rfh);
+ }
+ 
++#include "chrome/common/pref_names.h"
++#include "components/prefs/pref_service.h"
++
++double ChromeContentBrowserClient::GetTouchpadScrollSpeedMultiplier(
++    content::BrowserContext* browser_context) {
++  Profile* profile = Profile::FromBrowserContext(browser_context);
++  if (!profile) return 1.0;
++  return profile->GetPrefs()->GetDouble(prefs::kHeliumTouchpadScrollSpeedMultiplier);
++}
++
++
+ bool ChromeContentBrowserClient::IsSharedStorageAllowed(
+     content::BrowserContext* browser_context,
+     content::RenderFrameHost* rfh,
+--- a/content/browser/renderer_host/render_widget_host_view_aura.cc
++++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
+@@ -4,6 +4,10 @@
+ 
+ #include "content/browser/renderer_host/render_widget_host_view_aura.h"
+ 
++#include "content/public/common/content_client.h"
++#include "content/public/browser/content_browser_client.h"
++#include "content/public/browser/render_process_host.h"
++
+ #include <limits>
+ #include <memory>
+ #include <set>
+@@ -2667,6 +2671,13 @@
+ #endif  // BUILDFLAG(IS_WIN)
+ 
+ void RenderWidgetHostViewAura::OnScrollEvent(ui::ScrollEvent* event) {
++  if (event->type() == ui::EventType::kScroll) {
++    double multiplier = GetContentClient()->browser()->GetTouchpadScrollSpeedMultiplier(
++        host()->GetProcess()->GetBrowserContext());
++    if (multiplier != 1.0) {
++      event->Scale(static_cast<float>(multiplier));
++    }
++  }
+   event_handler_->OnScrollEvent(event);
+ }
+ 
