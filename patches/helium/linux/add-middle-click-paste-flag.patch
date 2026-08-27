@@ -30,7 +30,7 @@
  #include "base/logging.h"
  #include "base/strings/string_number_conversions.h"
  #include "base/strings/string_util.h"
-@@ -140,6 +141,12 @@ void UpdateFromSystemSettings(blink::Ren
+@@ -141,6 +142,12 @@ void UpdateFromSystemSettings(blink::Ren
  #endif  // BUILDFLAG(USE_AURA)
  
  #if BUILDFLAG(IS_LINUX)
@@ -70,8 +70,8 @@
    }
 --- a/ui/base/ui_base_features.cc
 +++ b/ui/base/ui_base_features.cc
-@@ -523,4 +523,6 @@ bool IsRoundedIconsEnabled() {
-          base::FeatureList::IsEnabled(kRoundedIcons);
+@@ -542,4 +542,6 @@ bool IsWebUIRoundedIconsEnabled() {
+   return base::FeatureList::IsEnabled(kWebUIRoundedIcons);
  }
  
 +BASE_FEATURE(kMiddleClickPasteEnabled, base::FEATURE_ENABLED_BY_DEFAULT);
@@ -79,9 +79,9 @@
  }  // namespace features
 --- a/ui/base/ui_base_features.h
 +++ b/ui/base/ui_base_features.h
-@@ -346,6 +346,9 @@ bool IsGlassFrameEnabled();
+@@ -363,6 +363,9 @@ bool IsRoundedIconsEnabled();
  COMPONENT_EXPORT(UI_BASE_FEATURES)
- bool IsRoundedIconsEnabled();
+ bool IsWebUIRoundedIconsEnabled();
  
 +COMPONENT_EXPORT(UI_BASE_FEATURES)
 +BASE_DECLARE_FEATURE(kMiddleClickPasteEnabled);
