@@ -1,0 +1,81 @@
+--- a/chrome/browser/ui/views/tabs/tab_strip.h
++++ b/chrome/browser/ui/views/tabs/tab_strip.h
+@@ -401,6 +401,8 @@ class TabStrip : public views::View,
+   // views::View:
+   void OnMouseEntered(const ui::MouseEvent& event) override;
+   void OnMouseExited(const ui::MouseEvent& event) override;
++  bool OnMousePressed(const ui::MouseEvent& event) override;
++  void OnMouseReleased(const ui::MouseEvent& event) override;
+   void AddedToWidget() override;
+   void RemovedFromWidget() override;
+   void OnThemeChanged() override;
+--- a/chrome/browser/ui/views/tabs/tab_strip.cc
++++ b/chrome/browser/ui/views/tabs/tab_strip.cc
+@@ -2443,6 +2443,21 @@ void TabStrip::OnMouseExited(const ui::MouseEvent& event) {
+   UpdateHoverCard(nullptr, HoverCardUpdateType::kHover);
+ }
+
++bool TabStrip::OnMousePressed(const ui::MouseEvent& event) {
++  if (event.IsOnlyMiddleMouseButton() && !GetTabAt(event.location())) {
++    return true;
++  }
++  return views::View::OnMousePressed(event);
++}
++
++void TabStrip::OnMouseReleased(const ui::MouseEvent& event) {
++  if (event.IsOnlyMiddleMouseButton() && !GetTabAt(event.location())) {
++    controller_->CreateNewTab(NewTabTypes::kNewTabButton);
++    return;
++  }
++  views::View::OnMouseReleased(event);
++}
++
+ void TabStrip::AddedToWidget() {
+   GetWidget()->AddObserver(this);
+   paint_as_active_subscription_ =
+--- a/chrome/browser/ui/views/frame/horizontal_tab_strip_region_view.cc
++++ b/chrome/browser/ui/views/frame/horizontal_tab_strip_region_view.cc
+@@ -26,6 +26,7 @@
+ #include "chrome/browser/ui/tabs/tab_menu_model.h"
+ #include "chrome/browser/ui/tabs/tab_strip_model.h"
+ #include "chrome/browser/ui/tabs/tab_strip_prefs.h"
++#include "chrome/browser/ui/tabs/tab_enums.h"
+ #include "chrome/browser/ui/ui_features.h"
+ #include "chrome/browser/ui/views/chrome_layout_provider.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+@@ -106,6 +107,21 @@ class FrameGrabHandle : public views::View {
+     return gfx::Size(27, 0);
+   }
+
++  bool OnMousePressed(const ui::MouseEvent& event) override {
++    if (event.IsOnlyMiddleMouseButton()) {
++      return true;
++    }
++    return views::View::OnMousePressed(event);
++  }
++
++  void OnMouseReleased(const ui::MouseEvent& event) override {
++    if (event.IsOnlyMiddleMouseButton() && tab_strip_) {
++      tab_strip_->controller()->CreateNewTab(NewTabTypes::kNewTabButton);
++      return;
++    }
++    views::View::OnMouseReleased(event);
++  }
++
+  private:
+   base::WeakPtr<TabStrip> tab_strip_;
+ };
+--- a/ui/views/widget/desktop_aura/window_event_filter_linux.cc
++++ b/ui/views/widget/desktop_aura/window_event_filter_linux.cc
+@@ -118,9 +118,9 @@ void WindowEventFilterLinux::OnClickedCaption(ui::MouseEvent* event,
+   if (event->changed_button_flags() & ui::EF_RIGHT_MOUSE_BUTTON) {
+     action_type = ui::LinuxUi::WindowFrameActionSource::kRightClick;
+     default_action = ui::LinuxUi::WindowFrameAction::kMenu;
+   } else if (event->changed_button_flags() & ui::EF_MIDDLE_MOUSE_BUTTON) {
+-    action_type = ui::LinuxUi::WindowFrameActionSource::kMiddleClick;
+-    default_action = ui::LinuxUi::WindowFrameAction::kNone;
++    // Let the views hierarchy handle middle click (e.g. tab strip opens new tab).
++    return;
+   } else if (event->changed_button_flags() & ui::EF_LEFT_MOUSE_BUTTON &&
+              event->flags() & ui::EF_IS_DOUBLE_CLICK) {
+     click_component_ = HTNOWHERE;
