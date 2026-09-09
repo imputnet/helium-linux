@@ -30,7 +30,7 @@
  #include "base/logging.h"
  #include "base/strings/string_number_conversions.h"
  #include "base/strings/string_util.h"
-@@ -141,6 +142,12 @@ void UpdateFromSystemSettings(blink::Ren
+@@ -144,6 +145,12 @@ void UpdateFromSystemSettings(blink::Ren
  #endif  // BUILDFLAG(USE_AURA)
  
  #if BUILDFLAG(IS_LINUX)
@@ -70,7 +70,7 @@
    }
 --- a/ui/base/ui_base_features.cc
 +++ b/ui/base/ui_base_features.cc
-@@ -542,4 +542,6 @@ bool IsWebUIRoundedIconsEnabled() {
+@@ -553,4 +553,6 @@ bool IsWebUIRoundedIconsEnabled() {
    return base::FeatureList::IsEnabled(kWebUIRoundedIcons);
  }
  
@@ -79,7 +79,7 @@
  }  // namespace features
 --- a/ui/base/ui_base_features.h
 +++ b/ui/base/ui_base_features.h
-@@ -363,6 +363,9 @@ bool IsRoundedIconsEnabled();
+@@ -377,6 +377,9 @@ bool IsRoundedIconsEnabled();
  COMPONENT_EXPORT(UI_BASE_FEATURES)
  bool IsWebUIRoundedIconsEnabled();
  
