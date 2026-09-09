@@ -193,12 +193,40 @@ fix_tool_downloading() {
         "${_src_dir}/tools/rust/build_rust.py"
 }
 
+install_cipd_package() {
+    local package="$1"
+    local destination="${_src_dir}/$2"
+    local version_selector="$3"
+    local version
+    version="$("${_src_dir}/third_party/depot_tools/gclient.py" getdep \
+        "$version_selector" --deps-file="${_src_dir}/DEPS")" || return
+    mkdir -p "$destination" || return
+    printf '%s %s\n' "$package" "$version" | \
+        "${_src_dir}/third_party/depot_tools/cipd" ensure \
+            -ensure-file - -root "$destination"
+}
+
 setup_toolchain() {
+    mkdir -p "${_src_dir}/third_party/node/linux/node-linux-x64/bin"
+    ln -sf "$(which node)" "${_src_dir}/third_party/node/linux/node-linux-x64/bin/node"
+    mkdir -p "${_src_dir}/third_party/gperf/cipd/bin/"
+    ln -sf "$(which gperf)" "${_src_dir}/third_party/gperf/cipd/bin/gperf"
+    mkdir -p "${_src_dir}/buildtools/linux64-format"
+    ln -sf "$(which clang-format)" \
+        "${_src_dir}/buildtools/linux64-format/clang-format"
+    mkdir -p "${_src_dir}/buildtools/third_party/mold/cipd/"
+    ln -sf "$(which mold)" "${_src_dir}/buildtools/third_party/mold/cipd/mold"
+    mkdir -p "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin"
+    ln -sf "$(which go)" "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin/go"
+
+    local -a setup_jobs=()
     # Chromium currently has no non-x86 llvm/rust builds on
     # Linux, so we have to build it ourselves.
     if [ "$_host_arch" = x64 ]; then
-        "${_src_dir}/tools/rust/update_rust.py"
-        "${_src_dir}/tools/clang/scripts/update.py"
+        "${_src_dir}/tools/rust/update_rust.py" &
+        setup_jobs+=("$! Rust")
+        "${_src_dir}/tools/clang/scripts/update.py" &
+        setup_jobs+=("$! Clang")
     else
         "${_src_dir}/tools/clang/scripts/build.py" \
             --without-fuchsia --without-android --disable-asserts \
@@ -214,31 +242,30 @@ setup_toolchain() {
 
     if grep -q -F "use_sysroot=true" "${_out_dir}/args.gn"; then
         "${_src_dir}/build/linux/sysroot_scripts/install-sysroot.py" --arch="$_host_arch" &
+        setup_jobs+=("$! $_host_arch sysroot")
         if [ "$_build_arch" != "$_host_arch" ]; then
             "${_src_dir}/build/linux/sysroot_scripts/install-sysroot.py" --arch="$_build_arch" &
+            setup_jobs+=("$! $_build_arch sysroot")
         fi
-        wait
     fi
 
-    mkdir -p "${_src_dir}/third_party/node/linux/node-linux-x64/bin"
-    ln -sf "$(which node)" "${_src_dir}/third_party/node/linux/node-linux-x64/bin/node"
-    mkdir -p "${_src_dir}/third_party/gperf/cipd/bin/"
-    ln -sf "$(which gperf)" "${_src_dir}/third_party/gperf/cipd/bin/gperf"
-    mkdir -p "${_src_dir}/buildtools/linux64-format"
-    ln -sf "$(which clang-format)" \
-        "${_src_dir}/buildtools/linux64-format/clang-format"
-    mkdir -p "${_src_dir}/buildtools/third_party/mold/cipd/"
-    ln -sf "$(which mold)" "${_src_dir}/buildtools/third_party/mold/cipd/mold"
-    mkdir -p "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin"
-    ln -sf "$(which go)" "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin/go"
+    install_cipd_package 'build/siso/${platform}' \
+        "third_party/siso/cipd" --var=siso_version &
+    setup_jobs+=("$! Siso")
 
-    local siso_version
-    siso_version="$("${_src_dir}/third_party/depot_tools/gclient.py" getdep \
-        --var=siso_version --deps-file="${_src_dir}/DEPS")"
-    mkdir -p "${_src_dir}/third_party/siso/cipd"
-    printf '%s %s\n' 'build/siso/${platform}' "${siso_version}" | \
-        "${_src_dir}/third_party/depot_tools/cipd" ensure \
-            -ensure-file - -root "${_src_dir}/third_party/siso/cipd"
+    local setup_job setup_exit_code setup_result=0
+    for setup_job in "${setup_jobs[@]}"; do
+        if wait "${setup_job%% *}"; then
+            :
+        else
+            setup_exit_code=$?
+            echo "${setup_job#* } setup failed (exit $setup_exit_code)" >&2
+            setup_result=$setup_exit_code
+        fi
+    done
+    if [ "$setup_result" -ne 0 ]; then
+        return "$setup_result"
+    fi
 
     # clone.py skips gclient hooks, including the hook that creates this file.
     local siso_config_dir="${_src_dir}/build/config/siso"
