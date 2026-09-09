@@ -249,6 +249,12 @@ setup_toolchain() {
         fi
     fi
 
+    local typescript_package="chromium/third_party/typescript/linux-amd64"
+    install_cipd_package "$typescript_package" \
+        "third_party/typescript/linux-amd64/src" \
+        "--revision=src/third_party/typescript/linux-amd64/src:${typescript_package}" &
+    setup_jobs+=("$! TypeScript")
+
     install_cipd_package 'build/siso/${platform}' \
         "third_party/siso/cipd" --var=siso_version &
     setup_jobs+=("$! Siso")
