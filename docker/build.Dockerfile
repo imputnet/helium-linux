@@ -13,9 +13,9 @@ RUN apt-get install -y apt-transport-https ca-certificates curl gnupg &&\
   curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 RUN apt-get -y update && apt-get -y install nodejs
 
-# needed to be able to compile LLVM
+# needed to compile LLVM on non-x86 hosts
 RUN if [ "$(uname -m)" != x86_64 ]; then \
-      apt-get -y install cmake clang lld; \
+      apt-get -y install cmake clang lld ninja-build; \
     fi
 
 # install all needed distro packages
@@ -26,7 +26,7 @@ RUN apt-get -y install bison debhelper desktop-file-utils flex gperf gsettings-d
   libkrb5-dev liblcms2-dev libminizip-dev libmodpbase64-dev libnspr4-dev libnss3-dev libopenjp2-7-dev libopus-dev libpam0g-dev \
   libpci-dev libpipewire-0.3-dev libpng-dev libpulse-dev libre2-dev libsnappy-dev libspeechd-dev libudev-dev libusb-1.0-0-dev \
   libva-dev libvpx-dev libwebp-dev libx11-xcb-dev libxcb-dri3-dev libxshmfence-dev libxslt1-dev libxss-dev libxt-dev libxtst-dev\
-  mesa-common-dev ninja-build pkg-config python3-jinja2 python3-setuptools python3-xcbgen python-is-python3 qtbase5-dev \
+  mesa-common-dev pkg-config python3-jinja2 python3-setuptools python3-xcbgen python-is-python3 qtbase5-dev \
   uuid-dev valgrind wdiff x11-apps xcb-proto xfonts-base xvfb xz-utils yasm golang-go mold clang-format
 
 # install additional packages needed when cloning the chromium repo (and sudo and vim for convenience)
