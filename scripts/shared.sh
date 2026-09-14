@@ -241,6 +241,9 @@ setup_toolchain() {
     if [ -n "${SISO_REAPI_ADDRESS:-}" ]; then
         cipd_args+=(--remote-exec)
     fi
+
+    export CIPD_CACHE_DIR="$_dl_cache/cipd"
+    mkdir -p "$CIPD_CACHE_DIR"
     python3 "$cipd_installer" "$_src_dir" "${cipd_args[@]}" &
     setup_jobs+=("$! CIPD packages")
 
