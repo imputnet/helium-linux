@@ -193,19 +193,6 @@ fix_tool_downloading() {
         "${_src_dir}/tools/rust/build_rust.py"
 }
 
-install_cipd_package() {
-    local package="$1"
-    local destination="${_src_dir}/$2"
-    local version_selector="$3"
-    local version
-    version="$("${_src_dir}/third_party/depot_tools/gclient.py" getdep \
-        "$version_selector" --deps-file="${_src_dir}/DEPS")" || return
-    mkdir -p "$destination" || return
-    printf '%s %s\n' "$package" "$version" | \
-        "${_src_dir}/third_party/depot_tools/cipd" ensure \
-            -ensure-file - -root "$destination"
-}
-
 setup_toolchain() {
     mkdir -p "${_src_dir}/third_party/node/linux/node-linux-x64/bin"
     ln -sf "$(which node)" "${_src_dir}/third_party/node/linux/node-linux-x64/bin/node"
@@ -249,15 +236,16 @@ setup_toolchain() {
         fi
     fi
 
-    local typescript_package="chromium/third_party/typescript/linux-amd64"
-    install_cipd_package "$typescript_package" \
-        "third_party/typescript/linux-amd64/src" \
-        "--revision=src/third_party/typescript/linux-amd64/src:${typescript_package}" &
-    setup_jobs+=("$! TypeScript")
+    local cipd_installer="${_main_repo}/devutils/install_cipd_deps.py"
+    local -a cipd_args=()
+    if [ -n "${SISO_REAPI_ADDRESS:-}" ]; then
+        cipd_args+=(--remote-exec)
+    fi
 
-    install_cipd_package 'build/siso/${platform}' \
-        "third_party/siso/cipd" --var=siso_version &
-    setup_jobs+=("$! Siso")
+    export CIPD_CACHE_DIR="$_dl_cache/cipd"
+    mkdir -p "$CIPD_CACHE_DIR"
+    python3 "$cipd_installer" "$_src_dir" "${cipd_args[@]}" &
+    setup_jobs+=("$! CIPD packages")
 
     local setup_job setup_exit_code setup_result=0
     for setup_job in "${setup_jobs[@]}"; do
@@ -283,11 +271,7 @@ setup_toolchain() {
 
 gn_gen() {
     cd "${_src_dir}"
-    local clang_bin="${_src_dir}/third_party/llvm-build/Release+Asserts/bin"
-    CXX="$clang_bin/clang++" ./tools/gn/bootstrap/bootstrap.py \
-        -o out/Default/gn \
-        --skip-generate-buildfiles
-    ./out/Default/gn gen out/Default --fail-on-unused-args
+    ./buildtools/linux64/gn gen out/Default --fail-on-unused-args
 }
 
 build() {
