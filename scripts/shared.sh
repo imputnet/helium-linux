@@ -203,8 +203,6 @@ setup_toolchain() {
         "${_src_dir}/buildtools/linux64-format/clang-format"
     mkdir -p "${_src_dir}/buildtools/third_party/mold/cipd/"
     ln -sf "$(which mold)" "${_src_dir}/buildtools/third_party/mold/cipd/mold"
-    mkdir -p "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin"
-    ln -sf "$(which go)" "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin/go"
 
     local -a setup_jobs=()
     # Chromium currently has no non-x86 llvm/rust builds on
@@ -236,7 +234,7 @@ setup_toolchain() {
         fi
     fi
 
-    local cipd_installer="${_main_repo}/devutils/install_cipd_deps.py"
+    local cipd_installer="${_main_repo}/utils/install_cipd_deps.py"
     local -a cipd_args=()
     if [ -n "${SISO_REAPI_ADDRESS:-}" ]; then
         cipd_args+=(--remote-exec)
