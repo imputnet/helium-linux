@@ -40,7 +40,6 @@ libqt5_shim.so
 libqt6_shim.so
 libvk_swiftshader.so
 libvulkan.so.1
-locales/
 product_logo_256.png
 resources.pak
 v8_context_snapshot.bin
@@ -56,6 +55,9 @@ mkdir -p "$_tarball_dir"
 for file in $_files; do
     cp -r "$_build_dir/src/out/Default/$file" "$_tarball_dir" &
 done
+
+mkdir -p "$_tarball_dir/locales"
+cp "$_build_dir/src/out/Default/locales/"*.pak "$_tarball_dir/locales/"
 
 cp "$_root_dir/package/helium.desktop" "$_tarball_dir"
 cp "$_root_dir/package/apparmor.cfg" "$_tarball_dir"
