@@ -119,7 +119,7 @@
    </if>
 --- a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
 +++ b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
-@@ -155,6 +155,7 @@
+@@ -154,6 +154,7 @@
  #endif
  
  #if BUILDFLAG(IS_LINUX)
@@ -127,7 +127,7 @@
  #include "ui/display/screen.h"
  #endif
  
-@@ -830,6 +831,15 @@ void AddClearBrowsingDataStrings(content
+@@ -831,6 +832,15 @@ void AddClearBrowsingDataStrings(content
    html_source->AddLocalizedStrings(kLocalizedStrings);
  }
  
@@ -143,7 +143,7 @@
  #if !BUILDFLAG(IS_CHROMEOS)
  void AddDefaultBrowserStrings(content::WebUIDataSource* html_source) {
    static constexpr webui::LocalizedString kLocalizedStrings[] = {
-@@ -848,9 +858,15 @@ void AddDefaultBrowserStrings(content::W
+@@ -849,9 +859,15 @@ void AddDefaultBrowserStrings(content::W
        {"defaultBrowserMakeDefaultButton",
         IDS_SETTINGS_DEFAULT_BROWSER_MAKE_DEFAULT_BUTTON},
        {"defaultBrowserError", IDS_SETTINGS_DEFAULT_BROWSER_ERROR},
