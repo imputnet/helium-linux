@@ -1,9 +1,9 @@
 --- a/chrome/browser/helium_flag_choices.h
 +++ b/chrome/browser/helium_flag_choices.h
-@@ -47,6 +47,9 @@ constexpr const char kHeliumCompactLocat
- 
- constexpr const char kHeliumNativeFrameMaterialsCommandLine[] =
+@@ -46,6 +46,9 @@ constexpr const char kHeliumNativeFrameM
      "helium-native-frame-materials";
+ constexpr const char kHeliumHidePageActionsCommandLine[] =
+     "helium-hide-page-actions";
 +
 +constexpr const char kMiddleClickPasteEnabledCommandLine[] =
 +    "helium-middle-click-paste-enabled";
@@ -13,8 +13,8 @@
 --- a/chrome/browser/helium_flag_entries.h
 +++ b/chrome/browser/helium_flag_entries.h
 @@ -85,4 +85,7 @@
-      "surfaces. May cause UI clarity issues. Helium flag.",
-      kOsMac, FEATURE_VALUE_TYPE(features::kHeliumNativeFrameMaterials)},
+      "Important actions and indicators will be missing. Helium flag.",
+      kOsDesktop, FEATURE_VALUE_TYPE(features::kHeliumHidePageActions)},
      // platform
 +    {helium::kMiddleClickPasteEnabledCommandLine, "Middle Click Paste",
 +     "Controls middle click paste functionality. Helium flag.", kOsLinux,
