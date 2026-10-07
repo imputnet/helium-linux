@@ -37,7 +37,7 @@ Signed-off-by: Matt Jolly <kangie@gentoo.org>
  }
 --- a/third_party/protobuf/proto_library.gni
 +++ b/third_party/protobuf/proto_library.gni
-@@ -596,7 +596,6 @@ template("proto_library") {
+@@ -600,7 +600,6 @@ template("proto_library") {
                    _protoc_gen_ts_path,
                    "//tools/protoc_wrapper/protoc-gen-ts_proto.py",
                  ] + _protoc_gen_ts_runtime_deps
