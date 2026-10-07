@@ -21,7 +21,6 @@ alias quilt='quilt --quiltrc -'
 
 ___helium_setup_gn() {
     SCCACHE_ENABLED=y write_gn_args
-    echo 'devtools_skip_typecheck = false' | tee -a "${_out_dir}/args.gn"
     sed -i s/is_official_build/is_component_build/ "${_out_dir}/args.gn"
 }
 

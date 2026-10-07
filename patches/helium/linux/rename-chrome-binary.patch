@@ -10,7 +10,7 @@
      deps = [
 --- a/components/crash/core/app/crashpad_linux.cc
 +++ b/components/crash/core/app/crashpad_linux.cc
-@@ -174,7 +174,7 @@ bool PlatformCrashpadInitialization(
+@@ -177,7 +177,7 @@ bool PlatformCrashpadInitialization(
      if (!base::PathService::Get(base::DIR_EXE, &handler_path)) {
        return false;
      }
@@ -41,9 +41,9 @@
    }
  
    executable("chrome_initial") {
-@@ -1873,19 +1873,19 @@ if (is_linux || is_chromeos) {
-       ]
+@@ -1878,20 +1878,20 @@ if (is_linux || is_chromeos) {
      }
+ 
      extract_symbols("chrome_symbols") {
 -      binary = "$root_out_dir/chrome"
 +      binary = "$root_out_dir/helium"
@@ -59,6 +59,7 @@
  
        deps = [ ":chrome" ]
      }
+ 
      extract_symbols("chrome_crashpad_symbols") {
 -      binary = "$root_out_dir/chrome_crashpad_handler"
 +      binary = "$root_out_dir/helium_crashpad_handler"
