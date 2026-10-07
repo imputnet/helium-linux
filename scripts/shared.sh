@@ -242,7 +242,8 @@ setup_toolchain() {
 
     export CIPD_CACHE_DIR="$_dl_cache/cipd"
     mkdir -p "$CIPD_CACHE_DIR"
-    python3 "$cipd_installer" "$_src_dir" "${cipd_args[@]}" &
+    PATH="${_src_dir}/third_party/depot_tools:${PATH}" \
+      python3 "$cipd_installer" "$_src_dir" "${cipd_args[@]}" &
     setup_jobs+=("$! CIPD packages")
 
     local setup_job setup_exit_code setup_result=0
