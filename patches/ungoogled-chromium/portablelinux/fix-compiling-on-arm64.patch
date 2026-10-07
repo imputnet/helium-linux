@@ -1,6 +1,6 @@
 --- a/build/toolchain/linux/BUILD.gn
 +++ b/build/toolchain/linux/BUILD.gn
-@@ -179,6 +179,13 @@ clang_v8_toolchain("clang_x64_v8_loong64
+@@ -182,6 +182,13 @@ clang_v8_toolchain("clang_x64_v8_loong64
    }
  }
  
@@ -48,7 +48,7 @@
  )
  from update import RmTree
  
-@@ -78,7 +79,7 @@ def FetchNcurseswLibrary():
+@@ -73,7 +74,7 @@ def FetchNcurseswLibrary():
      assert sys.platform.startswith('linux')
      ncursesw_dir = os.path.join(LLVM_BUILD_TOOLS_DIR, 'ncursesw')
      ncursesw_url = (
@@ -57,7 +57,7 @@
          f'/+/version:2@{NCURSESW_CIPD_LINUX_AMD_VERSION}'
      )
  
-@@ -165,7 +166,7 @@ def RunCargo(cargo_args):
+@@ -160,7 +161,7 @@ def RunCargo(cargo_args):
  
      if sys.platform.startswith('linux'):
          # We use these flags to avoid linking with the system libstdc++.
@@ -104,7 +104,7 @@
          '--no-tools',
          '--no-runtimes',
          # PIC needed for Rust build (links LLVM into shared object)
-@@ -924,7 +928,8 @@ def main():
+@@ -909,7 +913,8 @@ def main():
          # Fetch sysroot we build rustc against. This ensures a minimum supported
          # host (not Chromium target). Since the rustc linux package is for
          # x86_64 only, that is the sole needed sysroot.
