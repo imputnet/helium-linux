@@ -42,7 +42,10 @@ RUN tar --strip-components=1 -xvzf /tmp/sccache.tar.gz \
     -C /usr/bin --wildcards '*/sccache'
 
 # create builder user
-RUN groupadd -g ${GID} builder && useradd -d /home/builder -g ${GID} -u ${UID} -m builder
+RUN if ! getent group "${GID}" >/dev/null; then \
+        groupadd -g "${GID}" builder; \
+    fi && \
+    useradd -d /home/builder -g "${GID}" -u "${UID}" -m builder
 
 ENV GOPATH=/tmp/go
 ENV GOCACHE=/tmp/go-build-cache
