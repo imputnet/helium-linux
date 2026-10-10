@@ -25,13 +25,21 @@ ___helium_setup_gn() {
 }
 
 ___helium_info_pull() {
-    fetch_sources false false
+    fetch_sources "${1:-false}" false
 
     mkdir -p "$_src_dir/out/Default"
     cd "$_src_dir"
 }
 
 ___helium_setup() {
+    local clone=false
+    if [ $# -eq 1 ] && [ "$1" = -c ]; then
+        clone=true
+    elif [ $# -ne 0 ]; then
+        echo "usage: he setup [-c]" >&2
+        return 1
+    fi
+
     if [ -d "$_src_dir/out" ]; then
         echo "$_src_dir/out already exists" >&2
         return
@@ -39,7 +47,7 @@ ___helium_setup() {
 
     rm -rf "$_src_dir" && mkdir -p "$_dl_cache" "$_src_dir"
 
-    ___helium_info_pull
+    ___helium_info_pull "$clone"
     python3 "$_main_repo/utils/prune_binaries.py" --keep-contingent-paths "$_src_dir" "$_main_repo/pruning.list"
     helium_resources
     ___helium_setup_gn
@@ -158,7 +166,7 @@ ___helium_quilt_pop() {
 __helium_menu() {
     set -e
     case $1 in
-        setup) ___helium_setup;;
+        setup) shift; ___helium_setup "$@";;
         build) ___helium_build;;
         run) ___helium_run;;
         pull) ___helium_pull;;
@@ -173,7 +181,7 @@ __helium_menu() {
         translate) helium_apply_translations;;
         *)
             printf 'usage: he (setup | build | run | sub | unsub | namesub | nameunsub | merge | unmerge | push | pop | pull | reset | translate)\n' >&2
-            printf '\tsetup - sets up the dev environment for the first time\n' >&2
+            printf '\tsetup [-c] - sets up the dev environment, optionally cloning chromium\n' >&2
             printf '\tbuild - prepares a development build binary\n' >&2
             printf '\trun - runs a development build of helium with dev data dir & ui devtools enabled\n' >&2
             printf '\tsub - apply google domain and name substitutions\n' >&2
