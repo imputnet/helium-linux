@@ -26,7 +26,5 @@ helium_apply_translations
 helium_version
 helium_resources
 write_gn_args
-fix_tool_downloading
-setup_toolchain
 gn_gen
 build
