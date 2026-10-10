@@ -13,7 +13,7 @@ else  # depot
 fi
 
 if [ "$_prepare_only" = true ]; then
-    fetch_sources true true
+    fetch_sources false true
     apply_patches
     apply_domsub
     helium_substitution
@@ -21,8 +21,6 @@ if [ "$_prepare_only" = true ]; then
     helium_version
     helium_resources
     write_gn_args
-    fix_tool_downloading
-    setup_toolchain
     gn_gen
 else
     _task_timeout=18000
