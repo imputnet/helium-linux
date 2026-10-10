@@ -159,7 +159,7 @@ gn_gen() {
 build() {
     cd "${_src_dir}"
     configure_remoteexec
-    local siso="${_src_dir}/third_party/siso/cipd/siso"
+    local siso="${SISO_PATH:-${_src_dir}/third_party/siso/cipd/siso}"
     local autoninja="${_src_dir}/third_party/depot_tools/autoninja.py"
     SISO_PATH="$siso" "$autoninja" -C "$_out_dir" chrome chromedriver "$@"
 }
