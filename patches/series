@@ -1,6 +1,4 @@
-ungoogled-chromium/portablelinux/drop-nodejs-version-check.patch
 ungoogled-chromium/portablelinux/use-oauth2-client-switches-as-default.patch
-ungoogled-chromium/portablelinux/fix-compiling-on-arm64.patch
 
 helium/linux/change-chromium-branding.patch
 helium/linux/rename-chrome-binary.patch
