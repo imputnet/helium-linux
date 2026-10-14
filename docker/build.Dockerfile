@@ -2,24 +2,13 @@ FROM debian:trixie-slim
 
 ARG UID=1000
 ARG GID=$UID
-ARG NODE_VERSION="22"
 
 # set deb to non-interactive mode and upgrade packages
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && export DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && apt-get -y upgrade
 
-# install latest nodejs lts version
-RUN apt-get install -y apt-transport-https ca-certificates curl gnupg &&\
-  curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-RUN apt-get -y update && apt-get -y install nodejs
-
-# needed to compile LLVM on non-x86 hosts
-RUN if [ "$(uname -m)" != x86_64 ]; then \
-      apt-get -y install cmake clang lld ninja-build; \
-    fi
-
 # install all needed distro packages
-RUN apt-get -y install bison debhelper desktop-file-utils flex gperf gsettings-desktop-schemas-dev imagemagick \
+RUN apt-get -y install bison ca-certificates curl debhelper desktop-file-utils flex gsettings-desktop-schemas-dev imagemagick \
   libasound2-dev libavcodec-dev libavformat-dev libavutil-dev libcap-dev libcups2-dev libcurl4-openssl-dev libdrm-dev \
   libegl1-mesa-dev libelf-dev libevent-dev libexif-dev libflac-dev libgbm-dev libgcrypt20-dev libgl1-mesa-dev libgles2-mesa-dev \
   libglew-dev libglib2.0-dev libglu1-mesa-dev libgtk-3-dev libhunspell-dev libjpeg-dev libjs-jquery-flot libjsoncpp-dev \
@@ -27,10 +16,9 @@ RUN apt-get -y install bison debhelper desktop-file-utils flex gperf gsettings-d
   libpci-dev libpipewire-0.3-dev libpng-dev libpulse-dev libre2-dev libsnappy-dev libspeechd-dev libudev-dev libusb-1.0-0-dev \
   libva-dev libvpx-dev libwebp-dev libx11-xcb-dev libxcb-dri3-dev libxshmfence-dev libxslt1-dev libxss-dev libxt-dev libxtst-dev\
   mesa-common-dev pkg-config python3-jinja2 python3-setuptools python3-xcbgen python-is-python3 qtbase5-dev \
-  uuid-dev valgrind wdiff x11-apps xcb-proto xfonts-base xvfb xz-utils yasm mold clang-format
+  uuid-dev valgrind wdiff x11-apps xcb-proto xfonts-base xvfb xz-utils yasm zstd
 
-# install additional packages needed when cloning the chromium repo (and sudo and vim for convenience)
-RUN apt-get -y install git python3-httplib2 python3-pyparsing python3-six python3-pillow python3-requests rsync sudo vim
+RUN apt-get -y install git python3-pillow python3-requests rsync sudo vim
 
 # install sccache
 ARG SCCACHE_VERSION=0.10.0
