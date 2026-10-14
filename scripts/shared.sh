@@ -15,18 +15,7 @@ repo_root() {
 }
 
 setup_arch() {
-    _host_arch=$(uname -m)
-
-    if [ "$_host_arch" = "x86_64" ]; then
-        _host_arch="x64"
-    elif [ "$_host_arch" = "aarch64" ]; then
-        _host_arch="arm64"
-    fi
-
-    _build_arch="$_host_arch"
-    if [ -n "${ARCH:-}" ]; then
-        _build_arch="$ARCH"
-    fi
+    _build_arch="${ARCH:-x64}"
 
     if [ "$_build_arch" = "x86_64" ]; then
         _build_arch=x64
