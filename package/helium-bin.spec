@@ -1,4 +1,4 @@
-%define version 0.19.4.1
+%define version 0.20.1.1
 %global debug_package %{nil}
 
 Name:    helium-bin
