@@ -70,7 +70,7 @@
    }
 --- a/ui/base/ui_base_features.cc
 +++ b/ui/base/ui_base_features.cc
-@@ -547,4 +547,6 @@ bool IsColorIdCssStyleSheetOptimizationE
+@@ -566,4 +566,6 @@ bool IsColorIdCssStyleSheetOptimizationE
    return base::FeatureList::IsEnabled(kColorIdCssStyleSheetOptimization);
  }
  
@@ -79,7 +79,7 @@
  }  // namespace features
 --- a/ui/base/ui_base_features.h
 +++ b/ui/base/ui_base_features.h
-@@ -380,6 +380,9 @@ bool IsWebUIRoundedIconsEnabled();
+@@ -386,6 +386,9 @@ bool IsWebUIRoundedIconsEnabled();
  COMPONENT_EXPORT(UI_BASE_FEATURES)
  bool IsColorIdCssStyleSheetOptimizationEnabled();
  
