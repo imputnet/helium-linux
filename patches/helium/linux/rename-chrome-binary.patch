@@ -1,6 +1,6 @@
 --- a/components/crash/core/app/BUILD.gn
 +++ b/components/crash/core/app/BUILD.gn
-@@ -282,6 +282,7 @@ if (is_mac || is_android || is_linux ||
+@@ -289,6 +289,7 @@ if (is_mac || is_android || is_linux ||
    # We build a chromium-specific crashpad_handler executable so that we can
    # define custom UserStreamDataSources.
    executable("chrome_crashpad_handler") {
@@ -41,7 +41,7 @@
    }
  
    executable("chrome_initial") {
-@@ -1887,20 +1887,20 @@ if (is_linux || is_chromeos) {
+@@ -1883,20 +1883,20 @@ if (is_linux || is_chromeos) {
      }
  
      extract_symbols("chrome_symbols") {
