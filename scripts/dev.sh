@@ -125,7 +125,7 @@ ___helium_build() {
 ___helium_run() {
     cd "$_src_dir" && ./out/Default/helium \
     --user-data-dir="$HOME/.config/net.imput.helium.dev" \
-    --enable-ui-devtools=$RANDOM
+    --enable-ui-devtools=$RANDOM "$@"
 }
 
 ___helium_pull() {
@@ -168,7 +168,7 @@ __helium_menu() {
     case $1 in
         setup) shift; ___helium_setup "$@";;
         build) ___helium_build;;
-        run) ___helium_run;;
+        run) shift; ___helium_run "$@";;
         pull) ___helium_pull;;
         sub|unsub) ___helium_substitution "$1";;
         namesub|nameunsub) ___helium_name_substitution "$1";;
