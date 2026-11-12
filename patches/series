@@ -6,3 +6,5 @@ helium/linux/use-default-theme.patch
 helium/linux/add-middle-click-paste-flag.patch
 helium/linux/add-error-for-missing-desktop-file.patch
 helium/linux/disable-tab-strokes.patch
+helium/linux/add-wayland-background-blur.patch
+helium/linux/native-frame-materials.patch
