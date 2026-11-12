@@ -1,0 +1,232 @@
+--- a/chrome/browser/ui/views/frame/browser_desktop_window_tree_host_linux.cc
++++ b/chrome/browser/ui/views/frame/browser_desktop_window_tree_host_linux.cc
+@@ -15,14 +15,19 @@
+ #include "chrome/browser/ui/views/frame/browser_native_widget_aura_linux.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+ #include "chrome/browser/ui/views/frame/safe_invoke/safe_invoke.h"
++#include "chrome/browser/ui/views/helium/native_frame_materials.h"
+ #include "chrome/browser/ui/views/tabs/dragging/tab_drag_controller.h"
+ #include "chrome/browser/ui/views/tabs/tab_strip.h"
+ #include "third_party/abseil-cpp/absl/container/flat_hash_set.h"
++#include "third_party/skia/include/core/SkMatrix.h"
++#include "third_party/skia/include/core/SkPath.h"
++#include "third_party/skia/include/core/SkRegion.h"
+ #include "ui/base/dragdrop/mojom/drag_drop_types.mojom-shared.h"
+ #include "ui/base/mojom/window_show_state.mojom.h"
+ #include "ui/base/ui_base_features.h"
+ #include "ui/gfx/geometry/rect.h"
+ #include "ui/gfx/geometry/rect_conversions.h"
++#include "ui/gfx/geometry/skia_conversions.h"
+ #include "ui/linux/linux_ui.h"
+ #include "ui/ozone/public/ozone_platform.h"
+ #include "ui/platform_window/extensions/x11_extension.h"
+@@ -60,6 +65,23 @@ bool IsShowingFrame(bool use_custom_fram
+          window_state != ui::PlatformWindowState::kFullScreen;
+ }
+ 
++// Converts |rrect| in DIP to pixel rects that follow its rounded corners.
++std::vector<gfx::Rect> GetRoundedRectRegion(const SkRRect& rrect, float scale) {
++  SkRRect scaled;
++  rrect.transform(SkMatrix::Scale(scale, scale), &scaled);
++
++  SkRegion region;
++  region.setPath(SkPath::RRect(scaled),
++                 SkRegion(scaled.getBounds().roundOut()));
++
++  std::vector<gfx::Rect> rects;
++  for (SkRegion::Iterator it(region); !it.done(); it.next()) {
++    rects.push_back(gfx::SkIRectToRect(it.rect()));
++  }
++
++  return rects;
++}
++
+ }  // namespace
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+@@ -178,7 +200,22 @@ void BrowserDesktopWindowTreeHostLinux::
+     }
+   }
+ 
+-  if (ui::OzonePlatform::GetInstance()->IsWindowCompositingSupported()) {
++  if (helium::ShouldUseNativeFrameMaterials(browser_view_)) {
++    // The whole frame is translucent, so blur behind all of it and leave the
++    // opaque region empty.
++    std::vector<gfx::Rect> blur_region;
++    if (IsShowingFrame(native_widget_->UseCustomFrame(), window_state)) {
++      blur_region = GetRoundedRectRegion(view->GetRestoredClipRegion(), scale);
++    } else {
++      blur_region.push_back(
++          gfx::ScaleToEnclosingRect(gfx::Rect(widget_size), scale));
++    }
++
++    window->SetBackgroundBlurRegion(blur_region);
++    window->SetOpaqueRegion(std::nullopt);
++  } else if (ui::OzonePlatform::GetInstance()->IsWindowCompositingSupported()) {
++    window->SetBackgroundBlurRegion(std::nullopt);
++
+     // Set the opaque region.
+     std::vector<gfx::Rect> opaque_region;
+     if (IsShowingFrame(native_widget_->UseCustomFrame(), window_state)) {
+--- a/chrome/browser/ui/views/frame/browser_frame_view_linux.cc
++++ b/chrome/browser/ui/views/frame/browser_frame_view_linux.cc
+@@ -8,8 +8,10 @@
+ #include "chrome/browser/ui/views/chrome_layout_provider.h"
+ #include "chrome/browser/ui/views/frame/browser_native_widget_aura_linux.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
++#include "chrome/browser/ui/views/helium/native_frame_materials.h"
+ #include "ui/base/hit_test.h"
+ #include "ui/base/metadata/metadata_impl_macros.h"
++#include "ui/gfx/canvas.h"
+ #include "ui/gfx/geometry/insets_f.h"
+ #include "ui/gfx/geometry/rect_f.h"
+ #include "ui/gfx/geometry/rounded_corners_f.h"
+@@ -77,10 +79,30 @@ void BrowserFrameViewLinux::PaintRestore
+ #endif
+   auto shadow_values =
+       tiled ? gfx::ShadowValues() : GetShadowValues(ShouldPaintAsActive());
++  const SkRRect clip = GetRestoredClipRegion();
++  views::FrameBackground* background = frame_background();
++  if (helium::ShouldUseNativeFrameMaterials(GetBrowserView())) {
++    cc::PaintFlags flags;
++    flags.setAntiAlias(true);
++    flags.setColor(helium::GetNativeFrameMaterialTintColor(this));
++    canvas->sk_canvas()->drawRRect(clip, flags);
++    background = nullptr;
++  }
++
+   views::PaintRestoredFrameBorderLinux(
+-      *canvas, *this, frame_background(), GetRestoredClipRegion(),
+-      ShouldDrawRestoredFrameShadow(), ShouldPaintAsActive(),
+-      layout_->RestoredMirroredFrameBorderInsets(), shadow_values, tiled);
++      *canvas, *this, background, clip, ShouldDrawRestoredFrameShadow(),
++      ShouldPaintAsActive(), layout_->RestoredMirroredFrameBorderInsets(),
++      shadow_values, tiled);
++}
++
++void BrowserFrameViewLinux::PaintMaximizedFrameBorder(
++    gfx::Canvas* canvas) const {
++  if (helium::ShouldUseNativeFrameMaterials(GetBrowserView())) {
++    canvas->DrawColor(helium::GetNativeFrameMaterialTintColor(this));
++    return;
++  }
++
++  OpaqueBrowserFrameView::PaintMaximizedFrameBorder(canvas);
+ }
+ 
+ void BrowserFrameViewLinux::GetWindowMask(const gfx::Size& size,
+--- a/chrome/browser/ui/views/frame/browser_frame_view_linux.h
++++ b/chrome/browser/ui/views/frame/browser_frame_view_linux.h
+@@ -52,6 +52,7 @@ class BrowserFrameViewLinux : public Opa
+  protected:
+   // OpaqueBrowserFrameView:
+   void PaintRestoredFrameBorder(gfx::Canvas* canvas) const override;
++  void PaintMaximizedFrameBorder(gfx::Canvas* canvas) const override;
+   void GetWindowMask(const gfx::Size& size, SkPath* window_mask) override;
+   bool ShouldDrawRestoredFrameShadow() const override;
+ 
+--- a/chrome/browser/ui/views/frame/browser_native_widget_aura_linux.cc
++++ b/chrome/browser/ui/views/frame/browser_native_widget_aura_linux.cc
+@@ -27,6 +27,12 @@ BrowserNativeWidgetAuraLinux::BrowserNat
+       base::BindRepeating(
+           &BrowserNativeWidgetAuraLinux::OnUseCustomChromeFrameChanged,
+           base::Unretained(this)));
++  native_frame_materials_pref_.Init(
++      prefs::kHeliumNativeFrameMaterials,
++      browser_view->browser()->GetProfile()->GetPrefs(),
++      base::BindRepeating(
++          &BrowserNativeWidgetAuraLinux::OnNativeFrameMaterialsChanged,
++          base::Unretained(this)));
+ }
+ 
+ BrowserNativeWidgetAuraLinux::~BrowserNativeWidgetAuraLinux() = default;
+@@ -108,6 +114,7 @@ void BrowserNativeWidgetAuraLinux::TabDr
+ 
+ void BrowserNativeWidgetAuraLinux::ClientDestroyedWidget() {
+   use_custom_frame_pref_.Destroy();
++  native_frame_materials_pref_.Destroy();
+   BrowserNativeWidgetAura::ClientDestroyedWidget();
+ }
+ 
+@@ -128,6 +135,17 @@ void BrowserNativeWidgetAuraLinux::OnUse
+   host_->UpdateFrameHints();
+ }
+ 
++void BrowserNativeWidgetAuraLinux::OnNativeFrameMaterialsChanged() {
++  if (!browser_widget()) {
++    return;
++  }
++
++  browser_widget()->ThemeChanged();
++  if (host_) {
++    host_->UpdateFrameHints();
++  }
++}
++
+ BrowserNativeWidget* BrowserNativeWidgetFactory::Create(
+     BrowserWidget* browser_widget,
+     BrowserView* browser_view) {
+--- a/chrome/browser/ui/views/frame/browser_native_widget_aura_linux.h
++++ b/chrome/browser/ui/views/frame/browser_native_widget_aura_linux.h
+@@ -45,8 +45,11 @@ class BrowserNativeWidgetAuraLinux : pub
+   // Called when the preference changes.
+   void OnUseCustomChromeFrameChanged();
+ 
++  void OnNativeFrameMaterialsChanged();
++
+   // Whether the custom Chrome frame preference is set.
+   BooleanPrefMember use_custom_frame_pref_;
++  BooleanPrefMember native_frame_materials_pref_;
+ 
+   raw_ptr<BrowserDesktopWindowTreeHostLinux> host_ = nullptr;
+ };
+--- a/chrome/browser/ui/views/frame/opaque_browser_frame_view.h
++++ b/chrome/browser/ui/views/frame/opaque_browser_frame_view.h
+@@ -132,7 +132,7 @@ class OpaqueBrowserFrameView : public Br
+   // also paint the background of the titlebar area, since the top frame border
+   // and titlebar background are a contiguous component.
+   virtual void PaintRestoredFrameBorder(gfx::Canvas* canvas) const;
+-  void PaintMaximizedFrameBorder(gfx::Canvas* canvas) const;
++  virtual void PaintMaximizedFrameBorder(gfx::Canvas* canvas) const;
+   void PaintClientEdge(gfx::Canvas* canvas) const;
+ 
+   // Adds the app icon bounds to `params` if the icon is present.
+--- a/chrome/browser/ui/views/helium/BUILD.gn
++++ b/chrome/browser/ui/views/helium/BUILD.gn
+@@ -38,6 +38,7 @@ source_set("native_frame_materials") {
+     "//third_party/material_color_utilities",
+     "//ui/color",
+     "//ui/gfx",
++    "//ui/ozone",
+     "//ui/views",
+   ]
+ }
+--- a/chrome/browser/ui/views/helium/native_frame_materials.cc
++++ b/chrome/browser/ui/views/helium/native_frame_materials.cc
+@@ -16,6 +16,7 @@
+ #include "third_party/material_color_utilities/src/cpp/cam/hct.h"
+ #include "ui/color/color_provider.h"
+ #include "ui/gfx/color_utils.h"
++#include "ui/ozone/public/ozone_platform.h"
+ #include "ui/views/view.h"
+ #include "ui/views/widget/widget.h"
+ 
+@@ -169,12 +170,15 @@ std::optional<SkColor> GetNativeFrameMat
+ }
+ 
+ bool PlatformSupportsNativeFrameMaterials(const BrowserView& browser_view) {
+-  // Enabled by the platform patch that implements the material.
+-  return false;
++  // The frame is only blurred if the compositor supports it, which on Wayland
++  // takes ext-background-effect-v1 or KDE's blur protocol.
++  return ui::OzonePlatform::GetInstance()
++      ->GetPlatformRuntimeProperties()
++      .supports_background_blur;
+ }
+ 
+ bool HasVibrantNativeFrameMaterial() {
+-  return true;
++  return false;
+ }
+ 
+ }  // namespace helium

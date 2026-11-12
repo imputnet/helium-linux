@@ -1,0 +1,578 @@
+--- a/third_party/wayland-protocols/BUILD.gn
++++ b/third_party/wayland-protocols/BUILD.gn
+@@ -15,6 +15,10 @@ wayland_protocol("color_management_proto
+   sources = [ "src/staging/color-management/color-management-v1.xml" ]
+ }
+ 
++wayland_protocol("background_effect_protocol") {
++  sources = [ "src/staging/ext-background-effect/ext-background-effect-v1.xml" ]
++}
++
+ wayland_protocol("content_type_protocol") {
+   sources = [ "unstable/content-type/content-type-v1.xml" ]
+ }
+@@ -103,6 +107,10 @@ wayland_protocol("org_kde_kwin_appmenu")
+   sources = [ "kde/src/protocols/appmenu.xml" ]
+ }
+ 
++wayland_protocol("org_kde_kwin_blur") {
++  sources = [ "kde/src/protocols/blur.xml" ]
++}
++
+ wayland_protocol("org_kde_kwin_idle") {
+   sources = [ "kde/src/protocols/idle.xml" ]
+ }
+--- a/ui/platform_window/platform_window.cc
++++ b/ui/platform_window/platform_window.cc
+@@ -70,6 +70,9 @@ void PlatformWindow::SetOpaqueRegion(
+ void PlatformWindow::SetInputRegion(
+     std::optional<std::vector<gfx::Rect>> region_px) {}
+ 
++void PlatformWindow::SetBackgroundBlurRegion(
++    std::optional<std::vector<gfx::Rect>> region_px) {}
++
+ bool PlatformWindow::IsClientControlledWindowMovementSupported() const {
+   return true;
+ }
+--- a/ui/platform_window/platform_window.h
++++ b/ui/platform_window/platform_window.h
+@@ -194,6 +194,12 @@ class COMPONENT_EXPORT(PLATFORM_WINDOW)
+   // existing region will be reset.
+   virtual void SetInputRegion(std::optional<std::vector<gfx::Rect>> region_px);
+ 
++  // Asks the compositor to blur what is behind |region_px| of the window. If
++  // |region_px| is nullopt or empty, the blur is removed. Only has an effect
++  // when PlatformRuntimeProperties::supports_background_blur is true.
++  virtual void SetBackgroundBlurRegion(
++      std::optional<std::vector<gfx::Rect>> region_px);
++
+   // Whether the platform supports client-controlled window movement. Under
+   // Wayland, for example, this returns false, unless the required protocol
+   // extension is supported by the compositor.
+--- a/ui/ozone/public/ozone_platform.h
++++ b/ui/ozone/public/ozone_platform.h
+@@ -205,6 +205,11 @@ class COMPONENT_EXPORT(OZONE) OzonePlatf
+     // be stacked below an AcceleratedWidget to make a widget opaque.
+     bool needs_background_image = false;
+ 
++    // Wayland only: whether the compositor can blur the background behind
++    // translucent parts of a window. See
++    // PlatformWindow::SetBackgroundBlurRegion().
++    bool supports_background_blur = false;
++
+     // Wayland only: whether bubble widgets can use platform objects.
+     bool supports_subwindows_as_accelerated_widgets = false;
+ 
+--- a/ui/ozone/platform/wayland/BUILD.gn
++++ b/ui/ozone/platform/wayland/BUILD.gn
+@@ -47,6 +47,8 @@ source_set("wayland") {
+     "gpu/wayland_surface_factory.cc",
+     "gpu/wayland_surface_factory.h",
+     "gpu/wayland_surface_gpu.h",
++    "host/background_blur_manager.cc",
++    "host/background_blur_manager.h",
+     "host/begin_frame_source_wayland.cc",
+     "host/begin_frame_source_wayland.h",
+     "host/drm_syncobj_ioctl_wrapper.cc",
+@@ -256,6 +258,7 @@ source_set("wayland") {
+     "//third_party/wayland:wayland_egl",
+     "//third_party/wayland:wayland_util",
+     "//third_party/wayland-protocols:alpha_compositing_protocol",
++    "//third_party/wayland-protocols:background_effect_protocol",
+     "//third_party/wayland-protocols:color_management_protocol",
+     "//third_party/wayland-protocols:content_type_protocol",
+     "//third_party/wayland-protocols:cursor_shape_protocol",
+@@ -269,6 +272,7 @@ source_set("wayland") {
+     "//third_party/wayland-protocols:linux_dmabuf_protocol",
+     "//third_party/wayland-protocols:linux_drm_syncobj_protocol",
+     "//third_party/wayland-protocols:org_kde_kwin_appmenu",
++    "//third_party/wayland-protocols:org_kde_kwin_blur",
+     "//third_party/wayland-protocols:org_kde_kwin_idle",
+     "//third_party/wayland-protocols:pointer_constraints_protocol",
+     "//third_party/wayland-protocols:pointer_gestures_protocol",
+--- a/ui/ozone/platform/wayland/ozone_platform_wayland.cc
++++ b/ui/ozone/platform/wayland/ozone_platform_wayland.cc
+@@ -40,6 +40,7 @@
+ #include "ui/ozone/platform/wayland/gpu/wayland_gl_egl_utility.h"
+ #include "ui/ozone/platform/wayland/gpu/wayland_overlay_manager.h"
+ #include "ui/ozone/platform/wayland/gpu/wayland_surface_factory.h"
++#include "ui/ozone/platform/wayland/host/background_blur_manager.h"
+ #include "ui/ozone/platform/wayland/host/drm_syncobj_ioctl_wrapper.h"
+ #include "ui/ozone/platform/wayland/host/linux_ui_delegate_wayland.h"
+ #include "ui/ozone/platform/wayland/host/wayland_buffer_manager_connector.h"
+@@ -440,6 +441,9 @@ class OzonePlatformWayland : public Ozon
+ 
+       properties.supports_global_application_menus =
+           connection_->org_kde_kwin_appmenu_manager() != nullptr;
++      properties.supports_background_blur =
++          connection_->background_blur_manager() &&
++          connection_->background_blur_manager()->SupportsBlur();
+     } else if (buffer_manager_) {
+       DCHECK(has_initialized_gpu());
+       // These properties are set when the GetPlatformRuntimeProperties is
+--- a/ui/ozone/platform/wayland/common/wayland_object.cc
++++ b/ui/ozone/platform/wayland/common/wayland_object.cc
+@@ -6,9 +6,11 @@
+ 
+ #include <alpha-compositing-unstable-v1-client-protocol.h>
+ #include <appmenu-client-protocol.h>
++#include <blur-client-protocol.h>
+ #include <color-management-v1-client-protocol.h>
+ #include <content-type-v1-client-protocol.h>
+ #include <cursor-shape-v1-client-protocol.h>
++#include <ext-background-effect-v1-client-protocol.h>
+ #include <ext-idle-notify-v1-client-protocol.h>
+ #include <extended-drag-unstable-v1-client-protocol.h>
+ #include <fractional-scale-v1-client-protocol.h>
+@@ -150,6 +152,8 @@ void (*ObjectTraits<wl_proxy>::deleter)(
+   IMPLEMENT_WAYLAND_OBJECT_TRAITS_WITH_DELETER(TYPE, TYPE##_destroy)
+ 
+ // For convenience, keep aphabetical order in this list.
++IMPLEMENT_WAYLAND_OBJECT_TRAITS(ext_background_effect_manager_v1)
++IMPLEMENT_WAYLAND_OBJECT_TRAITS(ext_background_effect_surface_v1)
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS(ext_idle_notifier_v1)
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS(ext_idle_notification_v1)
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS(gtk_primary_selection_device)
+@@ -159,6 +163,9 @@ IMPLEMENT_WAYLAND_OBJECT_TRAITS(gtk_prim
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS_WITH_DELETER(org_kde_kwin_appmenu,
+                                              delete_appmenu)
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS(org_kde_kwin_appmenu_manager)
++IMPLEMENT_WAYLAND_OBJECT_TRAITS_WITH_DELETER(org_kde_kwin_blur,
++                                             org_kde_kwin_blur_release)
++IMPLEMENT_WAYLAND_OBJECT_TRAITS(org_kde_kwin_blur_manager)
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS(org_kde_kwin_idle)
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS(org_kde_kwin_idle_timeout)
+ IMPLEMENT_WAYLAND_OBJECT_TRAITS(overlay_prioritized_surface)
+--- a/ui/ozone/platform/wayland/common/wayland_object.h
++++ b/ui/ozone/platform/wayland/common/wayland_object.h
+@@ -103,6 +103,8 @@ bool CanBind(const std::string& interfac
+   }  // namespace wl
+ 
+ // For convenience, keep aphabetical order in this list.
++DECLARE_WAYLAND_OBJECT_TRAITS(ext_background_effect_manager_v1)
++DECLARE_WAYLAND_OBJECT_TRAITS(ext_background_effect_surface_v1)
+ DECLARE_WAYLAND_OBJECT_TRAITS(ext_idle_notifier_v1)
+ DECLARE_WAYLAND_OBJECT_TRAITS(ext_idle_notification_v1)
+ DECLARE_WAYLAND_OBJECT_TRAITS(gtk_primary_selection_device)
+@@ -111,6 +113,8 @@ DECLARE_WAYLAND_OBJECT_TRAITS(gtk_primar
+ DECLARE_WAYLAND_OBJECT_TRAITS(gtk_primary_selection_source)
+ DECLARE_WAYLAND_OBJECT_TRAITS(org_kde_kwin_appmenu)
+ DECLARE_WAYLAND_OBJECT_TRAITS(org_kde_kwin_appmenu_manager)
++DECLARE_WAYLAND_OBJECT_TRAITS(org_kde_kwin_blur)
++DECLARE_WAYLAND_OBJECT_TRAITS(org_kde_kwin_blur_manager)
+ DECLARE_WAYLAND_OBJECT_TRAITS(org_kde_kwin_idle)
+ DECLARE_WAYLAND_OBJECT_TRAITS(org_kde_kwin_idle_timeout)
+ DECLARE_WAYLAND_OBJECT_TRAITS(overlay_prioritized_surface)
+--- /dev/null
++++ b/ui/ozone/platform/wayland/host/background_blur_manager.cc
+@@ -0,0 +1,123 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#include "ui/ozone/platform/wayland/host/background_blur_manager.h"
++
++#include <blur-client-protocol.h>
++#include <ext-background-effect-v1-client-protocol.h>
++
++#include "base/check.h"
++#include "base/logging.h"
++#include "ui/ozone/platform/wayland/host/wayland_connection.h"
++
++namespace ui {
++
++namespace {
++constexpr uint32_t kVersion = 1;
++}  // namespace
++
++BackgroundBlurSurface::BackgroundBlurSurface(
++    wl::Object<ext_background_effect_surface_v1> effect)
++    : effect_(std::move(effect)) {}
++
++BackgroundBlurSurface::BackgroundBlurSurface(
++    org_kde_kwin_blur_manager* kde_manager,
++    wl_surface* surface)
++    : kde_manager_(kde_manager), surface_(surface) {}
++
++BackgroundBlurSurface::~BackgroundBlurSurface() = default;
++
++void BackgroundBlurSurface::SetRegion(wl_region* region) {
++  if (effect_) {
++    ext_background_effect_surface_v1_set_blur_region(effect_.get(), region);
++    return;
++  }
++
++  // A null region blurs the whole surface in KDE's protocol, so the effect
++  // has to be removed explicitly.
++  if (!region) {
++    if (kde_blur_) {
++      org_kde_kwin_blur_manager_unset(kde_manager_, surface_);
++      kde_blur_.reset();
++    }
++
++    return;
++  }
++
++  if (!kde_blur_) {
++    kde_blur_.reset(org_kde_kwin_blur_manager_create(kde_manager_, surface_));
++  }
++
++  org_kde_kwin_blur_set_region(kde_blur_.get(), region);
++  org_kde_kwin_blur_commit(kde_blur_.get());
++}
++
++// static
++void BackgroundBlurManager::Instantiate(WaylandConnection* connection,
++                                        wl_registry* registry,
++                                        uint32_t name,
++                                        const std::string& interface,
++                                        uint32_t version) {
++  if (!wl::CanBind(interface, version, kVersion, kVersion)) {
++    return;
++  }
++
++  auto& manager = connection->background_blur_manager_;
++  if (!manager) {
++    manager = std::make_unique<BackgroundBlurManager>();
++  }
++
++  if (interface == kExtInterfaceName && !manager->ext_manager_) {
++    manager->ext_manager_ =
++        wl::Bind<ext_background_effect_manager_v1>(registry, name, kVersion);
++    if (!manager->ext_manager_) {
++      LOG(ERROR) << "Failed to bind ext_background_effect_manager_v1";
++      return;
++    }
++
++    static constexpr ext_background_effect_manager_v1_listener kListener = {
++        .capabilities = &OnCapabilities,
++    };
++    ext_background_effect_manager_v1_add_listener(manager->ext_manager_.get(),
++                                                  &kListener, manager.get());
++  } else if (interface == kKdeInterfaceName && !manager->kde_manager_) {
++    manager->kde_manager_ =
++        wl::Bind<org_kde_kwin_blur_manager>(registry, name, kVersion);
++    if (!manager->kde_manager_) {
++      LOG(ERROR) << "Failed to bind org_kde_kwin_blur_manager";
++    }
++  }
++}
++
++BackgroundBlurManager::BackgroundBlurManager() = default;
++
++BackgroundBlurManager::~BackgroundBlurManager() = default;
++
++bool BackgroundBlurManager::SupportsBlur() const {
++  return ext_supports_blur_ || kde_manager_;
++}
++
++std::unique_ptr<BackgroundBlurSurface> BackgroundBlurManager::CreateSurface(
++    wl_surface* surface) {
++  if (ext_supports_blur_) {
++    return std::make_unique<BackgroundBlurSurface>(
++        wl::Object<ext_background_effect_surface_v1>(
++            ext_background_effect_manager_v1_get_background_effect(
++                ext_manager_.get(), surface)));
++  }
++
++  CHECK(kde_manager_);
++  return std::make_unique<BackgroundBlurSurface>(kde_manager_.get(), surface);
++}
++
++// static
++void BackgroundBlurManager::OnCapabilities(
++    void* data,
++    ext_background_effect_manager_v1* manager,
++    uint32_t flags) {
++  static_cast<BackgroundBlurManager*>(data)->ext_supports_blur_ =
++      flags & EXT_BACKGROUND_EFFECT_MANAGER_V1_CAPABILITY_BLUR;
++}
++
++}  // namespace ui
+--- /dev/null
++++ b/ui/ozone/platform/wayland/host/background_blur_manager.h
+@@ -0,0 +1,77 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#ifndef UI_OZONE_PLATFORM_WAYLAND_HOST_BACKGROUND_BLUR_MANAGER_H_
++#define UI_OZONE_PLATFORM_WAYLAND_HOST_BACKGROUND_BLUR_MANAGER_H_
++
++#include <memory>
++#include <string>
++
++#include "base/memory/raw_ptr.h"
++#include "ui/ozone/platform/wayland/common/wayland_object.h"
++
++namespace ui {
++
++class WaylandConnection;
++
++// Per-surface blur-behind effect.
++class BackgroundBlurSurface {
++ public:
++  BackgroundBlurSurface(wl::Object<ext_background_effect_surface_v1> effect);
++  BackgroundBlurSurface(org_kde_kwin_blur_manager* kde_manager,
++                        wl_surface* surface);
++  BackgroundBlurSurface(const BackgroundBlurSurface&) = delete;
++  BackgroundBlurSurface& operator=(const BackgroundBlurSurface&) = delete;
++  ~BackgroundBlurSurface();
++
++  // Sets the region of the surface with a blurred background. A null region
++  // removes the effect. Applied on the next wl_surface.commit.
++  void SetRegion(wl_region* region);
++
++ private:
++  wl::Object<ext_background_effect_surface_v1> effect_;
++
++  raw_ptr<org_kde_kwin_blur_manager> kde_manager_ = nullptr;
++  raw_ptr<wl_surface> surface_ = nullptr;
++  wl::Object<org_kde_kwin_blur> kde_blur_;
++};
++
++// Wraps ext_background_effect_manager_v1, falling back to
++// org_kde_kwin_blur_manager on KWin versions that predate the ext protocol.
++class BackgroundBlurManager
++    : public wl::GlobalObjectRegistrar<BackgroundBlurManager> {
++ public:
++  static constexpr char kExtInterfaceName[] =
++      "ext_background_effect_manager_v1";
++  static constexpr char kKdeInterfaceName[] = "org_kde_kwin_blur_manager";
++
++  static void Instantiate(WaylandConnection* connection,
++                          wl_registry* registry,
++                          uint32_t name,
++                          const std::string& interface,
++                          uint32_t version);
++
++  BackgroundBlurManager();
++  BackgroundBlurManager(const BackgroundBlurManager&) = delete;
++  BackgroundBlurManager& operator=(const BackgroundBlurManager&) = delete;
++  ~BackgroundBlurManager();
++
++  bool SupportsBlur() const;
++
++  std::unique_ptr<BackgroundBlurSurface> CreateSurface(wl_surface* surface);
++
++ private:
++  static void OnCapabilities(void* data,
++                             ext_background_effect_manager_v1* manager,
++                             uint32_t flags);
++
++  wl::Object<ext_background_effect_manager_v1> ext_manager_;
++  bool ext_supports_blur_ = false;
++
++  wl::Object<org_kde_kwin_blur_manager> kde_manager_;
++};
++
++}  // namespace ui
++
++#endif  // UI_OZONE_PLATFORM_WAYLAND_HOST_BACKGROUND_BLUR_MANAGER_H_
+--- a/ui/ozone/platform/wayland/host/wayland_connection.cc
++++ b/ui/ozone/platform/wayland/host/wayland_connection.cc
+@@ -31,6 +31,7 @@
+ #include "ui/gfx/linux/scoped_gbm_device.h"
+ #include "ui/ozone/common/features.h"
+ #include "ui/ozone/platform/wayland/common/wayland_util.h"
++#include "ui/ozone/platform/wayland/host/background_blur_manager.h"
+ #include "ui/ozone/platform/wayland/host/fractional_scale_manager.h"
+ #include "ui/ozone/platform/wayland/host/gtk_primary_selection_device_manager.h"
+ #include "ui/ozone/platform/wayland/host/org_kde_kwin_appmenu.h"
+@@ -152,6 +153,10 @@ WaylandConnection::~WaylandConnection()
+ bool WaylandConnection::Initialize(bool use_threaded_polling) {
+   // Register factories for classes that implement wl::GlobalObjectRegistrar<T>.
+   // Keep alphabetical order for convenience.
++  RegisterGlobalObjectFactory(BackgroundBlurManager::kExtInterfaceName,
++                              &BackgroundBlurManager::Instantiate);
++  RegisterGlobalObjectFactory(BackgroundBlurManager::kKdeInterfaceName,
++                              &BackgroundBlurManager::Instantiate);
+   RegisterGlobalObjectFactory(ExtIdleNotifier::kInterfaceName,
+                               &ExtIdleNotifier::Instantiate);
+   RegisterGlobalObjectFactory(FractionalScaleManager::kInterfaceName,
+--- a/ui/ozone/platform/wayland/host/wayland_connection.h
++++ b/ui/ozone/platform/wayland/host/wayland_connection.h
+@@ -40,6 +40,7 @@ struct InputDevice;
+ struct KeyboardDevice;
+ struct TouchscreenDevice;
+ 
++class BackgroundBlurManager;
+ class ExtIdleNotifier;
+ class GtkPrimarySelectionDeviceManager;
+ class OrgKdeKwinAppmenuManager;
+@@ -189,6 +190,10 @@ class WaylandConnection {
+     return data_device_manager_.get();
+   }
+ 
++  BackgroundBlurManager* background_blur_manager() const {
++    return background_blur_manager_.get();
++  }
++
+   ExtIdleNotifier* ext_idle_notifier() { return ext_idle_notifier_.get(); }
+ 
+   GtkPrimarySelectionDeviceManager* gtk_primary_selection_device_manager()
+@@ -316,6 +321,7 @@ class WaylandConnection {
+   // makes it possible to avoid exposing setters for all those global objects:
+   // these setters would only be needed by the globals but would be visible to
+   // everyone.
++  friend class BackgroundBlurManager;
+   friend class ExtIdleNotifier;
+   friend class FractionalScaleManager;
+   friend class GtkPrimarySelectionDeviceManager;
+@@ -462,6 +468,7 @@ class WaylandConnection {
+   std::unique_ptr<XdgForeignWrapper> xdg_foreign_;
+   std::unique_ptr<ZwpIdleInhibitManager> zwp_idle_inhibit_manager_;
+   std::unique_ptr<ExtIdleNotifier> ext_idle_notifier_;
++  std::unique_ptr<BackgroundBlurManager> background_blur_manager_;
+   std::unique_ptr<OverlayPrioritizer> overlay_prioritizer_;
+   std::unique_ptr<SinglePixelBuffer> single_pixel_buffer_;
+ 
+--- a/ui/ozone/platform/wayland/host/wayland_surface.cc
++++ b/ui/ozone/platform/wayland/host/wayland_surface.cc
+@@ -32,6 +32,7 @@
+ #include "ui/gfx/native_ui_types.h"
+ #include "ui/gfx/overlay_priority_hint.h"
+ #include "ui/ozone/platform/wayland/common/wayland_util.h"
++#include "ui/ozone/platform/wayland/host/background_blur_manager.h"
+ #include "ui/ozone/platform/wayland/host/fractional_scale_manager.h"
+ #include "ui/ozone/platform/wayland/host/overlay_prioritizer.h"
+ #include "ui/ozone/platform/wayland/host/wayland_buffer_handle.h"
+@@ -334,6 +335,45 @@ void WaylandSurface::set_opaque_region(
+   }
+ }
+ 
++void WaylandSurface::set_blur_region(
++    std::optional<std::vector<gfx::Rect>> region_px) {
++  pending_state_.blur_region_px.clear();
++  if (!root_window_) {
++    return;
++  }
++
++  if (region_px) {
++    pending_state_.blur_region_px = *region_px;
++  }
++
++  if (apply_state_immediately_) {
++    ApplyBlurRegion();
++    state_.blur_region_px = pending_state_.blur_region_px;
++  }
++}
++
++void WaylandSurface::ApplyBlurRegion() {
++  auto* manager = connection_->background_blur_manager();
++  if (!manager || !manager->SupportsBlur()) {
++    return;
++  }
++
++  const auto& region_px = pending_state_.blur_region_px;
++  if (!background_blur_) {
++    if (region_px.empty()) {
++      return;
++    }
++
++    background_blur_ = manager->CreateSurface(surface_.get());
++  }
++
++  background_blur_->SetRegion(
++      region_px.empty()
++          ? nullptr
++          : CreateAndAddRegion(region_px, GetWaylandScale(pending_state_))
++                .get());
++}
++
+ void WaylandSurface::set_input_region(
+     std::optional<std::vector<gfx::Rect>> region_px) {
+   pending_state_.input_region_px.clear();
+@@ -615,6 +655,12 @@ std::optional<bool> WaylandSurface::Appl
+     needs_commit = true;
+   }
+ 
++  if (pending_state_.blur_region_px != state_.blur_region_px ||
++      GetWaylandScale(pending_state_) != GetWaylandScale(state_)) {
++    ApplyBlurRegion();
++    needs_commit = true;
++  }
++
+   if (content_type_ &&
+       (pending_state_.contains_video != state_.contains_video)) {
+     wp_content_type_v1_set_content_type(content_type_.get(),
+@@ -823,6 +869,7 @@ WaylandSurface::State& WaylandSurface::S
+   damage_px = other.damage_px;
+   opaque_region_px = other.opaque_region_px;
+   input_region_px = other.input_region_px;
++  blur_region_px = other.blur_region_px;
+   color_space = other.color_space;
+   hdr_metadata = other.hdr_metadata;
+   buffer_id = other.buffer_id;
+--- a/ui/ozone/platform/wayland/host/wayland_surface.h
++++ b/ui/ozone/platform/wayland/host/wayland_surface.h
+@@ -35,6 +35,7 @@ struct zcr_blending_v1;
+ 
+ namespace ui {
+ 
++class BackgroundBlurSurface;
+ class WaylandSyncobjAcquireTimeline;
+ class WaylandConnection;
+ class WaylandOutput;
+@@ -135,6 +136,11 @@ class WaylandSurface {
+   // reset to cover the entire wl_surface.
+   void set_input_region(std::optional<std::vector<gfx::Rect>> region_px);
+ 
++  // Sets the region of this surface whose background is blurred by the
++  // compositor, in surface-local physical pixels. If |region_px| is nullopt or
++  // empty, the blur is removed.
++  void set_blur_region(std::optional<std::vector<gfx::Rect>> region_px);
++
+   // Set the crop uv of the attached wl_buffer.
+   // Unlike wp_viewport.set_source, this crops the buffer prior to
+   // |buffer_transform| being applied to the buffer, it will be transformed s.t.
+@@ -259,6 +265,7 @@ class WaylandSurface {
+     std::vector<gfx::Rect> damage_px;
+     std::vector<gfx::Rect> opaque_region_px;
+     std::vector<gfx::Rect> input_region_px;
++    std::vector<gfx::Rect> blur_region_px;
+ 
+     // The current color space and HDR metadata of the surface.
+     gfx::ColorSpace color_space;
+@@ -340,6 +347,8 @@ class WaylandSurface {
+   // scales.
+   int32_t surface_scale_set_ = 1;
+ 
++  void ApplyBlurRegion();
++
+   wl::Object<wl_region> CreateAndAddRegion(
+       const std::vector<gfx::Rect>& region_px,
+       float buffer_scale);
+@@ -364,6 +373,7 @@ class WaylandSurface {
+   wl::Object<wp_content_type_v1> content_type_;
+   wl::Object<wp_fractional_scale_v1> fractional_scale_;
+   std::unique_ptr<WaylandWpColorManagementSurface> wp_color_management_surface_;
++  std::unique_ptr<BackgroundBlurSurface> background_blur_;
+   ExplicitReleaseCallback next_explicit_release_request_;
+ 
+   // A cached copy of connection->supports_viewporter_surface_scaling(). While
+--- a/ui/ozone/platform/wayland/host/wayland_toplevel_window.cc
++++ b/ui/ozone/platform/wayland/host/wayland_toplevel_window.cc
+@@ -452,6 +452,11 @@ void WaylandToplevelWindow::SetInputRegi
+   root_surface()->set_input_region(region_px);
+ }
+ 
++void WaylandToplevelWindow::SetBackgroundBlurRegion(
++    std::optional<std::vector<gfx::Rect>> region_px) {
++  root_surface()->set_blur_region(region_px);
++}
++
+ void WaylandToplevelWindow::UpdateWindowScale(bool update_bounds) {
+   auto old_scale = applied_state().window_scale;
+   WaylandWindow::UpdateWindowScale(update_bounds);
+--- a/ui/ozone/platform/wayland/host/wayland_toplevel_window.h
++++ b/ui/ozone/platform/wayland/host/wayland_toplevel_window.h
+@@ -118,6 +118,8 @@ class WaylandToplevelWindow : public Way
+   void SetOpaqueRegion(
+       std::optional<std::vector<gfx::Rect>> region_px) override;
+   void SetInputRegion(std::optional<std::vector<gfx::Rect>> region_px) override;
++  void SetBackgroundBlurRegion(
++      std::optional<std::vector<gfx::Rect>> region_px) override;
+   bool IsClientControlledWindowMovementSupported() const override;
+ 
+   // WmMoveLoopHandler:

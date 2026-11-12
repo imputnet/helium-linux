@@ -12,7 +12,7 @@
  #endif /* CHROME_BROWSER_HELIUM_FLAG_CHOICES_H_ */
 --- a/chrome/browser/helium_flag_entries.h
 +++ b/chrome/browser/helium_flag_entries.h
-@@ -85,4 +85,7 @@
+@@ -86,4 +86,7 @@
       "Important actions and indicators will be missing. Helium flag.",
       kOsDesktop, FEATURE_VALUE_TYPE(features::kHeliumHidePageActions)},
      // platform
