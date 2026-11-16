@@ -41,7 +41,7 @@
    }
  
    executable("chrome_initial") {
-@@ -1883,20 +1883,20 @@ if (is_linux || is_chromeos) {
+@@ -1898,20 +1898,20 @@ if (is_linux || is_chromeos) {
      }
  
      extract_symbols("chrome_symbols") {

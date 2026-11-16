@@ -26,7 +26,7 @@
        break;
 --- a/chrome/browser/shell_integration_linux.h
 +++ b/chrome/browser/shell_integration_linux.h
-@@ -169,6 +169,10 @@ std::string GetDesktopEntryStringValueFr
+@@ -223,6 +223,10 @@ std::string GetDesktopEntryStringValueFr
      const std::string& key,
      const std::string& shortcut_contents);
  
@@ -39,7 +39,7 @@
  }  // namespace shell_integration_linux
 --- a/chrome/browser/shell_integration_linux.cc
 +++ b/chrome/browser/shell_integration_linux.cc
-@@ -135,6 +135,9 @@ shell_integration::DefaultWebClientState
+@@ -157,6 +157,9 @@ shell_integration::DefaultWebClientState
                                                  base::BlockingType::MAY_BLOCK);
  
    std::unique_ptr<base::Environment> env(base::Environment::Create());
@@ -49,8 +49,8 @@
  
    std::vector<std::string> argv;
    argv.push_back(kXdgSettings);
-@@ -453,6 +456,20 @@ std::string GetProgramClassClass(const b
-   return desktop_base_name;
+@@ -563,6 +566,20 @@ std::string GetPerProfileDesktopId(const
+   return base::StrCat({GetDesktopBaseName(desktop_file_name), "-", profile_id});
  }
  
 +bool HasInstalledDesktopFile(base::Environment* env) {
@@ -72,7 +72,7 @@
  std::string GetProgramClassName() {
 --- a/chrome/browser/ui/apps/chrome_app_delegate.cc
 +++ b/chrome/browser/ui/apps/chrome_app_delegate.cc
-@@ -120,6 +120,9 @@ void OpenURLAfterCheckIsDefaultBrowser(
+@@ -119,6 +119,9 @@ void OpenURLAfterCheckIsDefaultBrowser(
      case shell_integration::NOT_DEFAULT:
      case shell_integration::UNKNOWN_DEFAULT:
      case shell_integration::OTHER_MODE_IS_DEFAULT:
@@ -119,7 +119,7 @@
    </if>
 --- a/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
 +++ b/chrome/browser/ui/webui/settings/settings_localized_strings_provider.cc
-@@ -161,6 +161,7 @@
+@@ -162,6 +162,7 @@
  #endif
  
  #if BUILDFLAG(IS_LINUX)
@@ -127,7 +127,7 @@
  #include "ui/display/screen.h"
  #endif
  
-@@ -850,6 +851,15 @@ void AddClearBrowsingDataStrings(content
+@@ -877,6 +878,15 @@ void AddClearBrowsingDataStrings(content
    html_source->AddLocalizedStrings(kLocalizedStrings);
  }
  
@@ -143,7 +143,7 @@
  #if !BUILDFLAG(IS_CHROMEOS)
  void AddDefaultBrowserStrings(content::WebUIDataSource* html_source) {
    static constexpr webui::LocalizedString kLocalizedStrings[] = {
-@@ -868,9 +878,15 @@ void AddDefaultBrowserStrings(content::W
+@@ -895,9 +905,15 @@ void AddDefaultBrowserStrings(content::W
        {"defaultBrowserMakeDefaultButton",
         IDS_SETTINGS_DEFAULT_BROWSER_MAKE_DEFAULT_BUTTON},
        {"defaultBrowserError", IDS_SETTINGS_DEFAULT_BROWSER_ERROR},

@@ -1,6 +1,6 @@
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -2021,7 +2021,7 @@ if (is_linux || is_chromeos) {
+@@ -2036,7 +2036,7 @@ if (is_linux || is_chromeos) {
      sources = [ "//chrome/tools/build/linux/chrome-wrapper" ]
      if (is_linux) {
        sources += [
@@ -121,7 +121,7 @@
 +RDN="net.imput.helium"
 --- a/media/audio/pulse/pulse_util.cc
 +++ b/media/audio/pulse/pulse_util.cc
-@@ -39,8 +39,8 @@ namespace {
+@@ -37,8 +37,8 @@ namespace {
  constexpr char kBrowserDisplayName[] = "google-chrome";
  #define PRODUCT_STRING "Google Chrome"
  #else
@@ -134,7 +134,7 @@
  #if defined(DLOPEN_PULSEAUDIO)
 --- a/chrome/browser/shell_integration_linux.cc
 +++ b/chrome/browser/shell_integration_linux.cc
-@@ -468,11 +468,7 @@ std::string GetProgramClassClass() {
+@@ -578,11 +578,7 @@ std::string GetProgramClassClass() {
  }
  
  std::string GetIconName() {
