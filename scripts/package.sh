@@ -33,6 +33,7 @@ chrome_100_percent.pak
 chrome_200_percent.pak
 helium_crashpad_handler
 chromedriver
+hyphen-data
 icudtl.dat
 libEGL.so
 libGLESv2.so
