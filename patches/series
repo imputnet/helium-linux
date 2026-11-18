@@ -1,5 +1,6 @@
 ungoogled-chromium/portablelinux/use-oauth2-client-switches-as-default.patch
 
+helium/linux/middle-click-empty-tabstrip-opens-new-tab.patch
 helium/linux/change-chromium-branding.patch
 helium/linux/rename-chrome-binary.patch
 helium/linux/use-default-theme.patch
