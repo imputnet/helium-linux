@@ -41,5 +41,3 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
       - uses: ./.github/actions/release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -60,12 +60,11 @@ runs:
         } | tee ./github_release_note.md
 
     - name: Create Release
-      uses: imputnet/action-gh-release@v2.5
+      uses: imputnet/immutable-release@v1
       with:
-        tag_name: ${{ steps.version.outputs.version }}
+        tag: ${{ steps.version.outputs.version }}
         prerelease: true
-        fail_on_unmatched_files: true
-        body_path: ./github_release_note.md
+        notes-file: ./github_release_note.md
         files: |
           release/helium-*.AppImage
           release/helium-*.AppImage.zsync
