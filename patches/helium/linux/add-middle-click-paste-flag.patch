@@ -1,6 +1,6 @@
 --- a/chrome/browser/helium_flag_choices.h
 +++ b/chrome/browser/helium_flag_choices.h
-@@ -46,6 +46,9 @@ constexpr const char kHeliumNativeFrameM
+@@ -49,6 +49,9 @@ constexpr const char kHeliumNativeFrameM
      "helium-native-frame-materials";
  constexpr const char kHeliumHidePageActionsCommandLine[] =
      "helium-hide-page-actions";
@@ -12,7 +12,7 @@
  #endif /* CHROME_BROWSER_HELIUM_FLAG_CHOICES_H_ */
 --- a/chrome/browser/helium_flag_entries.h
 +++ b/chrome/browser/helium_flag_entries.h
-@@ -85,4 +85,7 @@
+@@ -95,4 +95,7 @@
       "Important actions and indicators will be missing. Helium flag.",
       kOsDesktop, FEATURE_VALUE_TYPE(features::kHeliumHidePageActions)},
      // platform
