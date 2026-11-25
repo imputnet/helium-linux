@@ -1,6 +1,6 @@
 --- a/chrome/browser/helium_flag_choices.h
 +++ b/chrome/browser/helium_flag_choices.h
-@@ -49,6 +49,9 @@ constexpr const char kHeliumNativeFrameM
+@@ -51,6 +51,9 @@ constexpr const char kHeliumNativeFrameM
      "helium-native-frame-materials";
  constexpr const char kHeliumHidePageActionsCommandLine[] =
      "helium-hide-page-actions";
@@ -12,9 +12,9 @@
  #endif /* CHROME_BROWSER_HELIUM_FLAG_CHOICES_H_ */
 --- a/chrome/browser/helium_flag_entries.h
 +++ b/chrome/browser/helium_flag_entries.h
-@@ -95,4 +95,7 @@
-      "Important actions and indicators will be missing. Helium flag.",
-      kOsDesktop, FEATURE_VALUE_TYPE(features::kHeliumHidePageActions)},
+@@ -101,4 +101,7 @@
+      "tabs by dragging them. Helium flag.",
+      kOsDesktop, FEATURE_VALUE_TYPE(tabs::kTabStripUnification)},
      // platform
 +    {helium::kMiddleClickPasteEnabledCommandLine, "Middle Click Paste",
 +     "Controls middle click paste functionality. Helium flag.", kOsLinux,
