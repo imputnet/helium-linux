@@ -111,10 +111,10 @@ write_gn_args() {
 
     cat "${_main_repo}/flags.gn" "${_root_dir}/flags.linux.gn" | tee "${_out_dir}/args.gn"
     echo "target_cpu = \"$_build_arch\"" | tee -a "${_out_dir}/args.gn"
-    echo "v8_target_cpu = \"$_build_arch\"" | tee -a "${_out_dir}/args.gn"
 
-    if [ "$_has_pgo" = true ]; then
-        echo "chrome_pgo_phase = 2" | tee -a "${_out_dir}/args.gn"
+    # Official builds default to PGO; Chromium only ships an x64 Linux profile.
+    if [ "$_has_pgo" != true ]; then
+        echo "chrome_pgo_phase = 0" | tee -a "${_out_dir}/args.gn"
     fi
 
     if [ -n "${SISO_REAPI_ADDRESS:-}" ]; then
