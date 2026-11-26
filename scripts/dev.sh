@@ -45,7 +45,8 @@ ___helium_setup() {
         return
     fi
 
-    rm -rf "$_src_dir" && mkdir -p "$_dl_cache" "$_src_dir"
+    rm -rf "$_src_dir" && mkdir -p "$_dl_cache" && \
+        ___helium_tree create "$_src_dir"
 
     ___helium_info_pull "$clone"
     python3 "$_main_repo/utils/prune_binaries.py" --keep-build-dependencies "$_src_dir" "$_main_repo/pruning.list"
@@ -140,6 +141,22 @@ ___helium_wt_path() {
     echo "$(dirname "$common").wt/$1"
 }
 
+___helium_tree() {
+    local fs
+    fs=$(stat -f -c %T "$(dirname "$2")" 2>/dev/null) || true
+    # btrfs and bcachefs support subvolume snapshots
+    if [ "$fs" = btrfs ] || [ "$fs" = bcachefs ]; then
+        "$fs" subvolume "$@" >/dev/null 2>&1 && return
+    fi
+
+    # otherwise, fall back to a plain directory, reflink copy and rm -rf
+    case "$1" in
+        create) mkdir "$2" ;;
+        snapshot) cp -a --reflink=auto "$2" "$3" ;;
+        delete) rm -rf "$2" ;;
+    esac
+}
+
 ___helium_wt_can_reflink() {
     local probe="$1/.reflink-probe.$$"
     cp --reflink=always "$_src_dir/buildtools/linux64/gn" "$probe" 2>/dev/null || return 1
@@ -186,7 +203,7 @@ ___helium_wt_new() {
 
     mkdir -p "$dest/build"
     ln -s "$_dl_cache" "$dest/build/download_cache"
-    cp -a --reflink=auto "$_src_dir" "$dest/build/src"
+    ___helium_tree snapshot "$_src_dir" "$dest/build/src"
     for f in "$_subs_cache" "$_namesubs_cache"; do
         [ ! -f "$f" ] || cp -a --reflink=auto "$f" "$dest/build/"
     done
@@ -199,6 +216,10 @@ ___helium_wt_rm() {
     local dest
     dest=$(___helium_wt_path "${1:?usage: he wt rm <name>}")
     [ -f "$dest/.git" ] || { echo "$dest is not a worktree" >&2; return 1; }
+    if [ ! -L "$dest/build" ] && [ ! -L "$dest/build/src" ]; then
+        ___helium_tree delete "$dest/build/src"
+    fi
+
     rm -rf "$dest/build"
     git -C "$_main_repo" worktree remove --force "$dest/helium-chromium" || true
     git -C "$_root_dir" worktree remove --force "$dest"
