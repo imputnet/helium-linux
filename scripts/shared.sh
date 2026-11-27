@@ -132,7 +132,6 @@ configure_remoteexec() {
     fi
 
     export SISO_REAPI_INSTANCE="${SISO_REAPI_INSTANCE:-main}"
-    export RBE_service_no_security=true
 
     python3 "${_src_dir}/build/config/siso/configure_siso.py" \
         --reapi_address="${SISO_REAPI_ADDRESS}" \
